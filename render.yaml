@@ -1,13 +1,14 @@
-# Render Blueprint — deploys backend (FastAPI) + kiosk frontend (static site)
+# Render Blueprint — deploys backend (FastAPI) + kiosk frontend + web portal (static sites)
 # Usage: Render Dashboard → New → Blueprint → connect this repo → Apply.
-# Or create services manually using the settings below.
+# The two static frontends automatically read the backend's public URL
+# (fromService → RENDER_EXTERNAL_URL) and bake it into the build via VITE_API_BASE_URL.
 
 services:
   # ---------- FastAPI Backend ----------
   - type: web
     name: coop-assistant-backend
     runtime: python
-    plan: free                 # change to starter for more RAM (chromadb is heavy)
+    plan: free                 # change to starter for more RAM (chromadb/torch is heavy)
     rootDir: .
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
@@ -15,6 +16,10 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
+      - key: DEFAULT_LLM_PROVIDER
+        value: gemini
+      - key: OFFLINE_MODE
+        value: "false"
       - key: GEMINI_API_KEY
         sync: false            # set in Render dashboard → Environment
       - key: GROQ_API_KEY
@@ -40,6 +45,32 @@ services:
         name: Cache-Control
         value: no-cache
     envVars:
-      # Set AFTER the backend exists, e.g. https://coop-assistant-backend.onrender.com
       - key: VITE_API_BASE_URL
-        sync: false
+        fromService:
+          type: web
+          name: coop-assistant-backend
+          envVarKey: RENDER_EXTERNAL_URL
+
+  # ---------- Citizen Web Portal (static) ----------
+  - type: web
+    name: coop-assistant-web
+    runtime: static
+    rootDir: frontend-web
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    routes:
+      # SPA fallback — serve index.html for all non-file routes
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: coop-assistant-backend
+          envVarKey: RENDER_EXTERNAL_URL

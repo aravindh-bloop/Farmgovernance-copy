@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const _apiRoot = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
+const API_BASE_URL = _apiRoot.includes('/api/') ? _apiRoot : `${_apiRoot}/api/v1`;
 
 /**
  * Send a text query to the unified assistant.

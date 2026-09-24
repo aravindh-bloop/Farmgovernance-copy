@@ -7,7 +7,8 @@
  * the exact response schema and mock behavior of the kiosk frontend service layer.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1';
+const _apiRoot = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/+$/, '');
+const API_BASE_URL = _apiRoot.includes('/api/') ? _apiRoot : `${_apiRoot}/api/v1`;
 
 // Connect to real backend API by default, fallback to mock if offline
 const USE_MOCK = false;
