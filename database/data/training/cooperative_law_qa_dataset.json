@@ -1,0 +1,129 @@
+[
+  {
+    "id": "LAW-01",
+    "act_name": "Multi-State Co-operative Societies (Amendment) Act, 2023",
+    "section": "Section 45 - Cooperative Election Authority",
+    "topic_code": "LAW_ELECTION_AUTHORITY",
+    "domain": "cooperative_law",
+    "title": "Cooperative Election Authority (CEA) & Democratic Governance",
+    "summary": "Mandates the Central Government to establish the Cooperative Election Authority (CEA) to conduct elections for the board of multi-state cooperative societies in an impartial, transparent, and timely manner.",
+    "key_provisions": [
+      "Elections must be conducted by the CEA before the expiry of the existing board's 5-year term.",
+      "Provisional voter lists must be published and objections invited at least 30 days before poll date.",
+      "Statutory right of one member, one vote (no proxy voting in primary cooperatives).",
+      "Disputes regarding voters list and election results must be referred to statutory arbitration under Section 84."
+    ],
+    "citations": [
+      "MSCS (Amendment) Act 2023 Section 45",
+      "Gazette Notification No. CG-DL-E-04082023-247858",
+      "Cooperative Election Rules 2023"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "LAW-02",
+    "act_name": "Multi-State Co-operative Societies Act, 2002 / 2023",
+    "section": "Section 84 - Reference of Disputes to Statutory Arbitration",
+    "topic_code": "LAW_ARBITRATION_SECTION_84",
+    "domain": "cooperative_law",
+    "title": "Dispute Resolution & Statutory Arbitration Procedure (Section 84)",
+    "summary": "Mandatory statutory dispute resolution mechanism for any dispute concerning the constitution, management, elections, or business of a cooperative society.",
+    "key_provisions": [
+      "Disputes between members, past members, or the society and board must be referred to the Central Registrar / appointed Arbitrator.",
+      "Jurisdiction of Civil Courts is strictly barred in respect of any dispute required to be referred to arbitration under Section 84.",
+      "Limitation period for monetary claims is 3 years from the date the cause of action arose (6 years for election disputes from election date).",
+      "Arbitration award has the status of a decree of a Civil Court and is enforceable via execution proceedings."
+    ],
+    "citations": [
+      "MSCS Act 2002/2023 Section 84",
+      "Arbitration and Conciliation Act 1996 Convergence Rules",
+      "Cooperative Dispute Regulations"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "LAW-03",
+    "act_name": "Multi-State Co-operative Societies (Amendment) Act, 2023",
+    "section": "Section 85 - Cooperative Ombudsman",
+    "topic_code": "LAW_OMBUDSMAN_SECTION_85",
+    "domain": "cooperative_law",
+    "title": "Establishment of Cooperative Ombudsman for Member Grievance Redressal",
+    "summary": "Statutory appointment of a Cooperative Ombudsman by the Central Government with territorial jurisdiction to inquire into complaints of members regarding deficiency in service, corruption, or non-compliance of bylaws.",
+    "key_provisions": [
+      "Members can file complaints regarding denial of membership, withholding of dividend, delay in loan sanctions, or lack of transparency.",
+      "Ombudsman has powers to summon records, examine witnesses under oath, and pass binding corrective orders within 90 days.",
+      "Appeals against the Ombudsman's order lie before the Central Registrar within 30 days."
+    ],
+    "citations": [
+      "MSCS (Amendment) Act 2023 Section 85",
+      "Cooperative Ombudsman Scheme Regulations 2023"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "LAW-04",
+    "act_name": "Multi-State Co-operative Societies Act, 2002 / 2023",
+    "section": "Section 43 & 44 - Disqualification of Board of Directors",
+    "topic_code": "LAW_BOARD_DISQUALIFICATIONS",
+    "domain": "cooperative_law",
+    "title": "Eligibility Criteria, Disqualifications & Term of Board of Directors",
+    "summary": "Establishes stringent statutory qualification standards and automatic disqualification criteria for elected directors to prevent corruption and conflict of interest.",
+    "key_provisions": [
+      "Disqualification for default: Any director who defaults on repayment of society loans for more than 3 consecutive months is disqualified.",
+      "Conflict of Interest: Persons engaged in private commercial business competing with the society's activities cannot hold directorship.",
+      "Statutory Reservation: Mandatory reservation of at least 1 seat for Scheduled Castes or Scheduled Tribes and 2 seats for Women on the Board.",
+      "Maximum continuous tenure of 2 terms (10 years) for President/Chairman to prevent entrenched vested interests."
+    ],
+    "citations": [
+      "MSCS Act 2023 Section 41, 43, 44",
+      "Model By-laws for Cooperatives Governance Rules"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "LAW-05",
+    "act_name": "State Co-operative Societies Acts / Model By-laws",
+    "section": "Section 19 - Open Membership & Right to Join",
+    "topic_code": "LAW_OPEN_MEMBERSHIP_SECTION_19",
+    "domain": "cooperative_law",
+    "title": "Statutory Right to Membership (Open Membership Principle)",
+    "summary": "Protects rural agriculturists, tenant farmers, and artisans against arbitrary exclusion or political gatekeeping by PACS managing committees.",
+    "key_provisions": [
+      "Any qualified person within the society's operational jurisdiction has a fundamental right to become a member.",
+      "PACS Managing Committee cannot reject a membership application without recording reasons in writing and communicating them within 30 days.",
+      "If no decision is communicated within 30 days, the applicant is legally deemed to be a member.",
+      "Direct appeal against wrongful refusal lies before the Assistant Registrar of Cooperative Societies (ARCS)."
+    ],
+    "citations": [
+      "Co-operative Societies Act Section 19",
+      "Model PACS Bye-Laws Clause 6",
+      "Supreme Court Ruling on Cooperative Open Membership"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "LAW-06",
+    "act_name": "Multi-State Co-operative Societies (Amendment) Act, 2023",
+    "section": "Section 70 & 70A - Mandatory Audit & Cooperative Rehabilitation Fund",
+    "topic_code": "LAW_AUDIT_AND_REHAB_FUND",
+    "domain": "cooperative_law",
+    "title": "Empanelled CA Audits & Cooperative Rehabilitation, Reconstruction and Development Fund",
+    "summary": "Statutory financial controls enforcing concurrent auditing by CAG/Central Registrar empanelled Chartered Accountants and creation of revival fund for sick cooperatives.",
+    "key_provisions": [
+      "Mandatory audit of every multi-state cooperative by empanelled Chartered Accountants within 6 months of financial year close.",
+      "Profitable multi-state societies must contribute 1% of net profits to the Cooperative Rehabilitation, Reconstruction and Development Fund.",
+      "Fund utilized for financial revival of sick cooperative societies, modern IT infrastructure, and distressed farmer relief."
+    ],
+    "citations": [
+      "MSCS Act 2023 Section 70, 70A",
+      "Gazette of India Extraordinary Part II Sec 1"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  }
+]

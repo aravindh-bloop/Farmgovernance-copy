@@ -1,0 +1,93 @@
+[
+  {
+    "id": "PMFBY-01",
+    "topic_code": "PMFBY_CORE_PREMIUM_RATES",
+    "title": "PMFBY Core Structure, Uniform Farmer Premium Slabs & Coverage Scope",
+    "domain": "pacs_pmfby",
+    "category": "Crop Insurance Core",
+    "ministry": "Ministry of Agriculture & Farmers Welfare, Government of India",
+    "official_source": "https://pmfby.gov.in",
+    "summary": "Comprehensive yield and weather-based crop risk protection for all food crops, oilseeds, and commercial/horticultural crops with heavily subsidized uniform farmer premium rates.",
+    "premium_rates": {
+      "kharif_food_oilseeds": "2.0% of Sum Insured",
+      "rabi_food_oilseeds": "1.5% of Sum Insured",
+      "commercial_horticultural": "5.0% of Sum Insured",
+      "balance_subsidy": "Shared 50:50 between Central Government and State Government (90:10 for North-East / Himalayan states)."
+    },
+    "citations": [
+      "Revised Operational Guidelines PMFBY 2023-2026 Sec 9",
+      "MoA&FW Premium Subsidy Rules",
+      "Cabinet Note on PMFBY Revamp"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "PMFBY-02",
+    "topic_code": "PMFBY_72H_CALAMITY_INTIMATION",
+    "title": "Individual Farm-Level Calamity Claim: Mandatory 72-Hour Intimation Window",
+    "domain": "pacs_pmfby",
+    "category": "Claims & Loss Assessment",
+    "ministry": "Department of Agriculture & Farmers Welfare",
+    "official_source": "https://pmfby.gov.in",
+    "summary": "Statutory rule governing localized calamities (hailstorm, landslide, inundation, cloudburst, natural fire) and post-harvest losses.",
+    "intimation_protocol": [
+      "Strict SLA: Farmer must report crop loss within 72 hours of the calamity occurrence.",
+      "Intimation Channels: Crop Insurance App (NCIP), National Toll-Free Helpline (14447), nearest PACS Secretary, Agriculture Officer, or DCCB branch.",
+      "Joint Loss Assessment Survey: Completed within 7 to 10 days by Insurance Surveyor and State Agriculture Department Representative.",
+      "Direct Benefit Settlement: 100% compensation deposited directly into farmer's bank account within 15 days of survey completion."
+    ],
+    "citations": [
+      "PMFBY Operational Guidelines Section 10 & 21.4",
+      "Krishi Rakshak Portal SLA Directives 2024",
+      "National Crop Insurance Portal Protocol"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "PMFBY-03",
+    "topic_code": "PMFBY_YES_TECH_AND_WINDS",
+    "title": "Technological Innovations: YES-TECH, WINDS Portal & CROPIC AI Appraisals",
+    "domain": "pacs_pmfby",
+    "category": "Agri-Tech & Modernization",
+    "ministry": "Department of Agriculture & Farmers Welfare",
+    "official_source": "https://pmfby.gov.in",
+    "summary": "Mandatory integration of space technology, remote sensing indices, and automated ground weather stations to eliminate human discretion in crop loss estimation.",
+    "technological_pillars": [
+      "YES-TECH (Yield Estimation System based on Technology): Blends satellite vegetation indices (NDVI/EVI), drone imagery, and Crop Cutting Experiments (CCE) for transparent yield calculations.",
+      "WINDS (Weather Information Network Data Systems): Network of hyper-local Automatic Weather Stations (AWS) and Automatic Rain Gauges (ARG) at the Gram Panchayat level.",
+      "CROPIC (Collection of Real-time Observations & Photographs of Crops): Geo-tagged and time-stamped ground crop photos uploaded by farmers and surveyors to prevent fraudulent claims.",
+      "Kisan Rin Portal (KRP) & NCIP Convergence: End-to-end digital integration between PACS KCC loans and insurance policies."
+    ],
+    "citations": [
+      "MoA&FW YES-TECH Standard Operating Procedure 2023",
+      "WINDS Implementation Framework 2024",
+      "CROPIC User Manual"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "PMFBY-04",
+    "topic_code": "PMFBY_POST_HARVEST_COVER",
+    "title": "Post-Harvest Loss Coverage (Up to 14 Days from Harvesting)",
+    "domain": "pacs_pmfby",
+    "category": "Risk Coverage",
+    "ministry": "Ministry of Agriculture & Farmers Welfare",
+    "official_source": "https://pmfby.gov.in",
+    "summary": "Comprehensive coverage against unseasonal rainfall, cyclones, and hailstorms for harvested crops lying in 'cut and spread' condition in the field for drying.",
+    "provisions": [
+      "Duration: Valid up to a maximum period of 14 days from harvesting.",
+      "Applicability: Available across India for specified crops harvested and spread in field for drying.",
+      "Assessment: Individual plot-level assessment on GPS-tagged photos.",
+      "Intimation: Must be reported within 72 hours via Crop Insurance App or Helpline 14447."
+    ],
+    "citations": [
+      "PMFBY Operational Guidelines Section 10.3",
+      "NCIP Post-Harvest Protocol"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  }
+]

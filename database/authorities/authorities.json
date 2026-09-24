@@ -1,0 +1,62 @@
+[
+  {
+    "designation": "Assistant Registrar of Cooperative Societies (ARCS)",
+    "jurisdiction": "Sub-Division / Taluk Level",
+    "powers": [
+      "Registration & inspection of Primary Agricultural Credit Societies",
+      "Hearing appeals against PACS membership rejection under Sec 19",
+      "Inquiry into management anomalies, embezzlement or voter list disputes"
+    ],
+    "contact_directory": {
+      "office": "Sub-Divisional Cooperative Department Office",
+      "helpline": "1800-180-COOP (Toll-Free)",
+      "email_pattern": "arcs.{subdivision}@cooperation.gov.in"
+    },
+    "escalation_level": 1
+  },
+  {
+    "designation": "District Central Cooperative Bank (DCCB) Branch Manager",
+    "jurisdiction": "Block / Branch Cluster",
+    "powers": [
+      "Credit line sanction for PACS",
+      "Sanction of KCC crop loans and disbursement monitoring",
+      "Inspection of PACS loan ledgers"
+    ],
+    "contact_directory": {
+      "office": "Nearest DCCB Branch Office",
+      "helpline": "1800-425-DCCB",
+      "email_pattern": "manager.branch@dccbank.in"
+    },
+    "escalation_level": 1
+  },
+  {
+    "designation": "District Level Grievance Redressal Committee (DGRC)",
+    "jurisdiction": "District Level (Headed by District Magistrate / Collector)",
+    "powers": [
+      "Adjudicating disputed PMFBY crop insurance claims",
+      "Ordering joint surveys for localized natural calamity damages",
+      "Directing insurance companies to release claim settlements"
+    ],
+    "contact_directory": {
+      "office": "District Collectorate / District Agriculture Officer (DAO) Room",
+      "helpline": "14447 (PMFBY Central Support)",
+      "email_pattern": "dgrc.{district}@pmfby.gov.in"
+    },
+    "escalation_level": 2
+  },
+  {
+    "designation": "Central Registrar / Cooperative Ombudsman",
+    "jurisdiction": "State / Apex National Level",
+    "powers": [
+      "Dispute arbitration under Section 84 of MSCS Act",
+      "Supervision of Multi-State Cooperatives and Apex Federations",
+      "Direct action on non-compliance of statutory audit and election rules"
+    ],
+    "contact_directory": {
+      "office": "Office of Central Registrar of Cooperative Societies, Ministry of Cooperation, New Delhi",
+      "helpline": "011-2338-CRCS",
+      "email_pattern": "crcs-complaints@gov.in"
+    },
+    "escalation_level": 3
+  }
+]

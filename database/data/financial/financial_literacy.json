@@ -1,0 +1,115 @@
+[
+  {
+    "id": "FIN-01",
+    "topic_code": "FIN_SCALE_OF_FINANCE_CALCULATION",
+    "title": "Scale of Finance (SoF): District-Wise Crop Loan Limit Formula",
+    "domain": "financial_literacy",
+    "category": "Crop Credit & KCC Limit",
+    "authority": "NABARD / District Level Technical Committee (DLTC)",
+    "official_source": "https://www.nabard.org",
+    "summary": "The objective statutory benchmark fixing the maximum borrowing credit limit per acre/hectare for each crop in every district.",
+    "formula_breakdown": [
+      "Crop Production Cost: Seed, fertilizer, pesticides, labor, machinery hire, irrigation charges fixed by DLTC.",
+      "Post-Harvest / Household Consumption Expense: Mandatory 10% addition to crop production cost.",
+      "Farm Asset Maintenance / Insurance: Mandatory 20% addition for repairs, diesel, and crop insurance premium.",
+      "Total 1st Year KCC Limit = (SoF × Cropped Area) + 10% Consumption + 20% Maintenance (Total 130% of base cost).",
+      "5-Year Revolving Limit: 10% automatic annual enhancement for each succeeding year (up to 170% by 5th year)."
+    ],
+    "citations": [
+      "NABARD Master Circular on Kisan Credit Card Scheme 2023-2026",
+      "State Level Bankers' Committee (SLBC) Scale of Finance Chart"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "FIN-02",
+    "topic_code": "FIN_INTEREST_SUBVENTION_4_PERCENT",
+    "title": "Modified Interest Subvention Scheme (MISS): 4% Effective Crop Loan Rate",
+    "domain": "financial_literacy",
+    "category": "Interest Subvention & Subsidies",
+    "authority": "Reserve Bank of India & Ministry of Agriculture",
+    "official_source": "https://www.rbi.org.in",
+    "summary": "Central Government interest subvention ensuring farmers get short-term crop loans up to ₹3.00 Lakhs at an effective rate of only 4% per annum.",
+    "financial_mechanics": [
+      "Benchmark Lending Rate: Banks/PACS lend at statutory rate of 7.00% p.a.",
+      "Base Interest Subvention: Central Government provides 1.50% interest subvention to lending institutions.",
+      "Prompt Repayment Incentive (PRI): 3.00% additional interest rebate for farmers repaying within the 1-year due date.",
+      "Net Effective Interest Rate for Farmer = 7.00% - 3.00% = 4.00% p.a. (up to ₹3.00 Lakhs loan limit).",
+      "Collateral-Free Limit: Loans up to ₹1.60 Lakhs require zero land mortgage or collateral security."
+    ],
+    "citations": [
+      "RBI Master Circular FIDD.CO.FSD.BC.No.104/05.05.010/2023-24",
+      "MoA&FW MISS Operational Guidelines"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "FIN-03",
+    "topic_code": "FIN_TITLE_DEED_RELEASE_COMPENSATION",
+    "title": "RBI Fair Lending Code: 15-30 Day Title Deed Release & ₹5,000/Day Penalty",
+    "domain": "financial_literacy",
+    "category": "Fair Lending & Consumer Rights",
+    "authority": "Reserve Bank of India (RBI)",
+    "official_source": "https://www.rbi.org.in",
+    "summary": "Mandatory statutory regulation compelling banks and cooperative financial institutions to return original land/property documents within a maximum of 30 days (15 days under best practice) of full loan repayment.",
+    "statutory_rules": [
+      "Timely Release: Regulated entities must release all original property documents and remove charges with registry within 30 days of loan settlement.",
+      "₹5,000 Per Day Delay Compensation: If the institution delays release beyond 30 days, it must compensate the borrower at ₹5,000 for each day of delay.",
+      "Lost Documents: In case of loss/damage to original documents, the lender must obtain certified duplicate copies at its own expense within 30 days and pay ₹5,000/day penalty for any further delay.",
+      "Right of Return: Borrower has the option to collect documents from the branch where the loan was serviced or any designated branch."
+    ],
+    "citations": [
+      "RBI Circular RBI/2023-24/60 DoR.MCS.REC.38/01.01.001/2023-24",
+      "Fair Lending Directions - Release of Movable / Immovable Property Documents"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "FIN-04",
+    "topic_code": "FIN_AEPS_MICRO_ATM_SAFETY",
+    "title": "AePS & Micro-ATM Safety at PACS: Two-Factor Authentication & Zero-Liability",
+    "domain": "financial_literacy",
+    "category": "Digital Banking Security",
+    "authority": "National Payments Corporation of India (NPCI) & RBI",
+    "official_source": "https://www.npci.org.in",
+    "summary": "Security protocols and member protection rights when conducting Aadhaar Enabled Payment System (AePS) biometric transactions at PACS Common Service Counters.",
+    "safety_norms": [
+      "Mandatory Two-Factor Authentication (2FA): PACS operator/Business Correspondent must perform biometric authentication for every session.",
+      "Printed Receipt Mandatory: PACS must provide immediate printed or SMS receipt showing Transaction ID, Amount, and Remaining Balance.",
+      "No Blank Slips: Farmers must never authenticate biometrics without knowing the exact transaction amount.",
+      "Zero-Liability Fraud Protection: Any unauthorized transaction reported within 3 working days is entitled to 100% full reversal by the bank."
+    ],
+    "citations": [
+      "NPCI AePS Operating Guidelines 2024",
+      "RBI Circular on Customer Protection - Limiting Liability in Unauthorized Electronic Banking Transactions"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  },
+  {
+    "id": "FIN-05",
+    "topic_code": "FIN_DBT_AADHAAR_SEEDING_VS_LINKING",
+    "title": "NPCI Aadhaar DBT Seeding vs Basic Bank Account Linking",
+    "domain": "financial_literacy",
+    "category": "Direct Benefit Transfer (DBT)",
+    "authority": "NPCI / Ministry of Finance",
+    "official_source": "https://www.npci.org.in",
+    "summary": "Critical technical distinction explaining why PM-KISAN, PMFBY, and fertilizer subsidies fail despite having an Aadhaar-linked bank account.",
+    "key_differences": [
+      "Aadhaar Linking (KYC): Account-level identity verification only; does not enable automated government DBT routing.",
+      "NPCI DBT Seeding (Aadhaar Mapper): Maps your 12-digit Aadhaar number to a specific bank account in the central NPCI mapper for receiving government subsidies.",
+      "Only ONE bank account can be NPCI DBT Seeded at any given time.",
+      "Fixing DBT failure: Submit the 'Mandate for NPCI Aadhaar Seeding' form at the bank/PACS branch and check status on UIDAI portal or *99*99*1#."
+    ],
+    "citations": [
+      "NPCI DBT Aadhaar Mapper SOP",
+      "DBT Bharat Mission Operational Guidelines",
+      "PM-KISAN DBT Integration Manual"
+    ],
+    "is_verified": true,
+    "trust_score": 0.99
+  }
+]

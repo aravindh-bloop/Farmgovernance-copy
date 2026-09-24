@@ -1,0 +1,242 @@
+[
+  {
+    "id": "GRV-01",
+    "grievance_code": "PACS_LOAN_DELAY",
+    "category": "PACS Crop Loan Delay or Wrongful Denial",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve PACS Crop Loan Delay or Wrongful Denial?",
+      "Who is the competent authority to complain against PACS Crop Loan Delay or Wrongful Denial?",
+      "What is the statutory SLA timeline for PACS Crop Loan Delay or Wrongful Denial?",
+      "What evidence is required to prove PACS Crop Loan Delay or Wrongful Denial?",
+      "What legal action will be taken under Model PACS By-laws 2023 Clause 14(3), Cooperative Citizen Charter SLA Directive, NABARD KCC Operational Manual Sec 4.2 for PACS Crop Loan Delay or Wrongful Denial?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under Model PACS By-laws (Clause 14) and Cooperative Citizen Charter, loan applications must be disposed within 15 days. If delayed, the farmer can bypass the PACS Secretary and submit Form-B directly to the DCCB Branch Manager, who possesses statutory concurrent sanctioning authority.",
+      "override_authority": "Branch Manager, District Central Cooperative Bank (DCCB) / Assistant Registrar of Cooperative Societies (ARCS)",
+      "legal_sections": [
+        "Model PACS By-laws 2023 Clause 14(3)",
+        "Cooperative Citizen Charter SLA Directive",
+        "NABARD KCC Operational Manual Sec 4.2"
+      ],
+      "sla_days": 15,
+      "penalty": "Departmental disciplinary inquiry against Secretary under Cooperative Service Rules; withholding of administrative commission."
+    }
+  },
+  {
+    "id": "GRV-02",
+    "grievance_code": "PMFBY_PREMIUM_DEFAULT",
+    "category": "PACS Failed to Remit PMFBY Crop Insurance Premium (Bank Default)",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve PACS Failed to Remit PMFBY Crop Insurance Premium (Bank Default)?",
+      "Who is the competent authority to complain against PACS Failed to Remit PMFBY Crop Insurance Premium (Bank Default)?",
+      "What is the statutory SLA timeline for PACS Failed to Remit PMFBY Crop Insurance Premium (Bank Default)?",
+      "What evidence is required to prove PACS Failed to Remit PMFBY Crop Insurance Premium (Bank Default)?",
+      "What legal action will be taken under PMFBY Revised Operational Guidelines Clause 17.2 & 21.5, MoA&FW NCIP Notification on Financial Institution Liability for PACS Failed to Remit PMFBY Crop Insurance Premium (Bank Default)?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under PMFBY Operational Guidelines (Clause 17.2 & 21.5 - 'Default by Financial Institutions'), if PACS/Bank fails to remit the premium in time despite receiving the farmer's application, the lending bank / PACS is legally liable to pay 100% of the admissible claim amount to the farmer from its own funds.",
+      "override_authority": "District Level Grievance Redressal Committee (DGRC) chaired by District Magistrate / Collector",
+      "legal_sections": [
+        "PMFBY Revised Operational Guidelines Clause 17.2 & 21.5",
+        "MoA&FW NCIP Notification on Financial Institution Liability"
+      ],
+      "sla_days": 15,
+      "penalty": "Direct debit of claim amount from PACS/Bank operational account by DGRC order + 12% penal interest per annum for delay."
+    }
+  },
+  {
+    "id": "GRV-03",
+    "grievance_code": "FERTILIZER_OVERCHARGING_BUNDLING",
+    "category": "Fertilizer Overpricing above MRP / Forced Tagging & Bundling",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Fertilizer Overpricing above MRP / Forced Tagging & Bundling?",
+      "Who is the competent authority to complain against Fertilizer Overpricing above MRP / Forced Tagging & Bundling?",
+      "What is the statutory SLA timeline for Fertilizer Overpricing above MRP / Forced Tagging & Bundling?",
+      "What evidence is required to prove Fertilizer Overpricing above MRP / Forced Tagging & Bundling?",
+      "What legal action will be taken under Fertilizer (Control) Order 1985 Clause 21 & 28, Essential Commodities Act 1955 Section 3 & 7, Consumer Protection Act 2019 Section 2(47) Unfair Trade Practice for Fertilizer Overpricing above MRP / Forced Tagging & Bundling?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under Clause 21 of the Fertilizer (Control) Order 1985 and Section 3 & 7 of the Essential Commodities Act 1955, selling fertilizers above printed MRP or forced bundling is a cognizable criminal offense. The District Fertilizer Inspector (Chief Agriculture Officer) has statutory powers to conduct on-the-spot raids, seize stock, cancel retail licenses, and lodge FIRs within 48 hours.",
+      "override_authority": "District Fertilizer Inspector / Chief Agriculture Officer (CAO) / Assistant Registrar (ARCS)",
+      "legal_sections": [
+        "Fertilizer (Control) Order 1985 Clause 21 & 28",
+        "Essential Commodities Act 1955 Section 3 & 7",
+        "Consumer Protection Act 2019 Section 2(47) Unfair Trade Practice"
+      ],
+      "sla_days": 2,
+      "penalty": "Immediate suspension and cancellation of fertilizer retail distribution license + prosecution under Essential Commodities Act (imprisonment up to 7 years)."
+    }
+  },
+  {
+    "id": "GRV-04",
+    "grievance_code": "MEMBERSHIP_DENIAL_POLITICAL",
+    "category": "Unlawful Denial of PACS Membership (Open Membership Violation)",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Unlawful Denial of PACS Membership (Open Membership Violation)?",
+      "Who is the competent authority to complain against Unlawful Denial of PACS Membership (Open Membership Violation)?",
+      "What is the statutory SLA timeline for Unlawful Denial of PACS Membership (Open Membership Violation)?",
+      "What evidence is required to prove Unlawful Denial of PACS Membership (Open Membership Violation)?",
+      "What legal action will be taken under State Cooperative Societies Act Section 19 / 23 (Appeal against refusal), Model PACS By-laws 2023 Clause 4 & 5, MSCS Act 2023 Section 25 for Unlawful Denial of PACS Membership (Open Membership Violation)?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under Section 19 of State Cooperative Societies Acts and Model PACS By-laws Clause 4, PACS operates under the 'Open and Voluntary Membership' principle. If the society fails to communicate approval or rejection within 60 days of receiving the application and share capital, membership is 'DEEMED GRANTED' by operation of law. The Deputy Registrar (DRCS) issues an order directing the Secretary to enroll the member and issue a passbook within 15 days.",
+      "override_authority": "Assistant Registrar of Cooperative Societies (ARCS) / Deputy Registrar (DRCS)",
+      "legal_sections": [
+        "State Cooperative Societies Act Section 19 / 23 (Appeal against refusal)",
+        "Model PACS By-laws 2023 Clause 4 & 5",
+        "MSCS Act 2023 Section 25"
+      ],
+      "sla_days": 21,
+      "penalty": "ARCS passes coercive order enrolling the member; Secretary fined under Cooperative Rules for willful defiance."
+    }
+  },
+  {
+    "id": "GRV-05",
+    "grievance_code": "BRIBE_CORRUPTION_COMMISSION",
+    "category": "Demand for Bribe / Illegal Commission by PACS Staff or Loan Officer",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Demand for Bribe / Illegal Commission by PACS Staff or Loan Officer?",
+      "Who is the competent authority to complain against Demand for Bribe / Illegal Commission by PACS Staff or Loan Officer?",
+      "What is the statutory SLA timeline for Demand for Bribe / Illegal Commission by PACS Staff or Loan Officer?",
+      "What evidence is required to prove Demand for Bribe / Illegal Commission by PACS Staff or Loan Officer?",
+      "What legal action will be taken under Prevention of Corruption Act 1988 (Amended 2018) Section 7, State Cooperative Societies Act Section 83 (Inquiry into conduct of officers), Indian Penal Code / BNS provisions on Extortion for Demand for Bribe / Illegal Commission by PACS Staff or Loan Officer?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Demand for illegal gratification is a non-bailable criminal offense under Section 7 of the Prevention of Corruption Act, 1988 (amended 2018). The applicant can immediately alert the State Anti-Corruption Bureau (ACB Toll-Free 1064 / 1800-series) and simultaneously file a written vigilance complaint before the Chief Executive Officer / Vigilance Officer of DCCB and District Collector under Section 83 of the Cooperative Act.",
+      "override_authority": "State Anti-Corruption Bureau (ACB) / DCCB Chief Vigilance Officer / District Collector",
+      "legal_sections": [
+        "Prevention of Corruption Act 1988 (Amended 2018) Section 7",
+        "State Cooperative Societies Act Section 83 (Inquiry into conduct of officers)",
+        "Indian Penal Code / BNS provisions on Extortion"
+      ],
+      "sla_days": 7,
+      "penalty": "Immediate suspension from service, registration of FIR under Section 7 PC Act (imprisonment 3 to 7 years), and lifetime debarment from cooperative management."
+    }
+  },
+  {
+    "id": "GRV-06",
+    "grievance_code": "NO_DUES_CERTIFICATE_DELAY",
+    "category": "Refusal to Issue No Dues Certificate (NDC) & Release Land Title Deeds",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Refusal to Issue No Dues Certificate (NDC) & Release Land Title Deeds?",
+      "Who is the competent authority to complain against Refusal to Issue No Dues Certificate (NDC) & Release Land Title Deeds?",
+      "What is the statutory SLA timeline for Refusal to Issue No Dues Certificate (NDC) & Release Land Title Deeds?",
+      "What evidence is required to prove Refusal to Issue No Dues Certificate (NDC) & Release Land Title Deeds?",
+      "What legal action will be taken under RBI Master Direction - Fair Practices Code for Lenders, RBI Notification RBI/2023-24/60 (Release of Property Documents), State Land Revenue Code (Removal of Encumbrance/Bhoomi Charge) for Refusal to Issue No Dues Certificate (NDC) & Release Land Title Deeds?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under RBI Master Circular on Fair Lending Practices and Cooperative Bank Guidelines, banks and PACS MUST release all original movable/immovable property title documents and issue a formal No Dues Certificate within 15 DAYS of full loan settlement. Failure to release documents within 15 days makes the bank liable to pay compensation of ₹5,000 per day of delay to the borrower.",
+      "override_authority": "RBI Integrated Ombudsman (CMS Portal) / DCCB General Manager / Deputy Registrar",
+      "legal_sections": [
+        "RBI Master Direction - Fair Practices Code for Lenders",
+        "RBI Notification RBI/2023-24/60 (Release of Property Documents)",
+        "State Land Revenue Code (Removal of Encumbrance/Bhoomi Charge)"
+      ],
+      "sla_days": 15,
+      "penalty": "Mandatory compensation of ₹5,000 per day of delay paid directly to the borrower + disciplinary penalty against Branch Manager."
+    }
+  },
+  {
+    "id": "GRV-07",
+    "grievance_code": "COOP_ELECTION_VOTER_FRAUD",
+    "category": "Cooperative Election Irregularities & Voters List Manipulation",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Cooperative Election Irregularities & Voters List Manipulation?",
+      "Who is the competent authority to complain against Cooperative Election Irregularities & Voters List Manipulation?",
+      "What is the statutory SLA timeline for Cooperative Election Irregularities & Voters List Manipulation?",
+      "What evidence is required to prove Cooperative Election Irregularities & Voters List Manipulation?",
+      "What legal action will be taken under MSCS Act 2023 Section 45 (Cooperative Election Authority), State Cooperative Election Rules, MSCS Act Section 84 (Election Arbitration) for Cooperative Election Irregularities & Voters List Manipulation?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under Section 45 of the Multi-State Cooperative Societies Act 2023 and State Cooperative Election Authority (SCEA) Rules, disputes relating to the conduct of cooperative elections and voter lists must be filed before the Cooperative Election Authority / Returning Officer within 7 days of publication of the provisional voter list. An election petition lies before the Cooperative Court / Section 84 Arbitrator.",
+      "override_authority": "State Cooperative Election Authority (SCEA) / District Election Officer (Cooperatives)",
+      "legal_sections": [
+        "MSCS Act 2023 Section 45 (Cooperative Election Authority)",
+        "State Cooperative Election Rules",
+        "MSCS Act Section 84 (Election Arbitration)"
+      ],
+      "sla_days": 7,
+      "penalty": "Quashing of rigged election results, appointment of non-partisan Government Administrator, and criminal prosecution of the Returning Officer."
+    }
+  },
+  {
+    "id": "GRV-08",
+    "grievance_code": "DIVIDEND_SHARE_WITHHOLDING",
+    "category": "Illegal Withholding of Member Dividend or Share Bonus",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Illegal Withholding of Member Dividend or Share Bonus?",
+      "Who is the competent authority to complain against Illegal Withholding of Member Dividend or Share Bonus?",
+      "What is the statutory SLA timeline for Illegal Withholding of Member Dividend or Share Bonus?",
+      "What evidence is required to prove Illegal Withholding of Member Dividend or Share Bonus?",
+      "What legal action will be taken under MSCS Act 2023 Section 67 (Disposal of Net Profits & Dividend), State Cooperative Societies Act Section 63, Model PACS By-laws Clause 32 for Illegal Withholding of Member Dividend or Share Bonus?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under Section 63 of State Cooperative Societies Acts and MSCS Act 2023 Section 67, declared dividend must be credited to member bank accounts within 30 days of the AGM resolution. Undistributed dividend cannot be diverted to secret reserves. Members can petition the Deputy Registrar (DRCS) under Section 84 for mandatory payment along with 9% interest.",
+      "override_authority": "Assistant Registrar (ARCS) / Section 84 Arbitrator / Cooperative Ombudsman",
+      "legal_sections": [
+        "MSCS Act 2023 Section 67 (Disposal of Net Profits & Dividend)",
+        "State Cooperative Societies Act Section 63",
+        "Model PACS By-laws Clause 32"
+      ],
+      "sla_days": 30,
+      "penalty": "Audit surcharge against Board members personally liable for unauthorized withholding of approved dividend."
+    }
+  },
+  {
+    "id": "GRV-09",
+    "grievance_code": "UNAUTHORIZED_BANK_DEDUCTIONS",
+    "category": "Unauthorized Deductions / Hidden Charges on KCC Account",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Unauthorized Deductions / Hidden Charges on KCC Account?",
+      "Who is the competent authority to complain against Unauthorized Deductions / Hidden Charges on KCC Account?",
+      "What is the statutory SLA timeline for Unauthorized Deductions / Hidden Charges on KCC Account?",
+      "What evidence is required to prove Unauthorized Deductions / Hidden Charges on KCC Account?",
+      "What legal action will be taken under RBI Master Circular - Interest Rates & Service Charges on Agriculture Advances, Consumer Protection Act 2019 (Deficiency in Service), Banking Ombudsman Scheme 2021 for Unauthorized Deductions / Hidden Charges on KCC Account?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under RBI Circular on KCC Loan Operations and Fair Lending Guidelines, no processing fees, inspection charges, or ledger folio fees can be levied on KCC crop loans up to ₹3 Lakh. Unsolicited insurance policies (bundled life/accidental policies) without express written consent are strictly illegal. The bank must refund the debited amount with interest within 30 days.",
+      "override_authority": "RBI Integrated Ombudsman (CMS) / Principal Nodal Officer of Lending Bank",
+      "legal_sections": [
+        "RBI Master Circular - Interest Rates & Service Charges on Agriculture Advances",
+        "Consumer Protection Act 2019 (Deficiency in Service)",
+        "Banking Ombudsman Scheme 2021"
+      ],
+      "sla_days": 30,
+      "penalty": "Mandatory refund of unauthorized debits with interest + compensation up to ₹20,000 awarded by Banking Ombudsman for deficiency in service."
+    }
+  },
+  {
+    "id": "GRV-10",
+    "grievance_code": "FINANCIAL_FRAUD_MISAPPROPRIATION",
+    "category": "Financial Embezzlement, Bogus Loans & Misappropriation by Board",
+    "domain": "grievance",
+    "questions": [
+      "How to resolve Financial Embezzlement, Bogus Loans & Misappropriation by Board?",
+      "Who is the competent authority to complain against Financial Embezzlement, Bogus Loans & Misappropriation by Board?",
+      "What is the statutory SLA timeline for Financial Embezzlement, Bogus Loans & Misappropriation by Board?",
+      "What evidence is required to prove Financial Embezzlement, Bogus Loans & Misappropriation by Board?",
+      "What legal action will be taken under State Cooperative Societies Act Section 83 (Statutory Inquiry), State Cooperative Societies Act Section 88 (Surcharge & Recovery), MSCS Act 2023 Section 108 (Inspection & Surcharge), Prevention of Corruption Act Section 13 for Financial Embezzlement, Bogus Loans & Misappropriation by Board?"
+    ],
+    "verified_facts": {
+      "statutory_remedy": "Under Section 77 / 83 of the State Cooperative Societies Act and Section 108 of the MSCS Act 2023, on application by at least one-tenth of total members, the Registrar of Cooperative Societies (RCS) is legally bound to order a Statutory Inquiry by a Special Auditor/Officer. Under Section 88/91 (Surcharge proceedings), the Registrar possesses powers equivalent to a Civil Court to attach properties of corrupt management and recover stolen money.",
+      "override_authority": "Registrar of Cooperative Societies (RCS) / District Collector / State Vigilance Directorate",
+      "legal_sections": [
+        "State Cooperative Societies Act Section 83 (Statutory Inquiry)",
+        "State Cooperative Societies Act Section 88 (Surcharge & Recovery)",
+        "MSCS Act 2023 Section 108 (Inspection & Surcharge)",
+        "Prevention of Corruption Act Section 13"
+      ],
+      "sla_days": 45,
+      "penalty": "Dissolution and supersession of Managing Committee, personal property attachment under Surcharge Section 88, and criminal FIR under IPC/BNS."
+    }
+  }
+]

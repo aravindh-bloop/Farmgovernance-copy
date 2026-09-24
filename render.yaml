@@ -1,0 +1,45 @@
+# Render Blueprint — deploys backend (FastAPI) + kiosk frontend (static site)
+# Usage: Render Dashboard → New → Blueprint → connect this repo → Apply.
+# Or create services manually using the settings below.
+
+services:
+  # ---------- FastAPI Backend ----------
+  - type: web
+    name: coop-assistant-backend
+    runtime: python
+    plan: free                 # change to starter for more RAM (chromadb is heavy)
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: GEMINI_API_KEY
+        sync: false            # set in Render dashboard → Environment
+      - key: GROQ_API_KEY
+        sync: false
+      - key: SARVAM_API_KEY
+        sync: false
+
+  # ---------- Kiosk Frontend (static) ----------
+  - type: web
+    name: coop-assistant-kiosk
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    pullRequestPreviewsEnabled: false
+    routes:
+      # SPA fallback — serve index.html for all non-file routes
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    envVars:
+      # Set AFTER the backend exists, e.g. https://coop-assistant-backend.onrender.com
+      - key: VITE_API_BASE_URL
+        sync: false

@@ -1,0 +1,29 @@
+# systemd unit — Chrome/Chromium kiosk mode (fullscreen, auto-restart)
+# Install: sudo cp deploy/kiosk-browser.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now kiosk-browser
+# Requires: a desktop session (X or Wayland) as user 'kiosk' with auto-login.
+
+[Unit]
+Description=Kiosk Browser (Chromium fullscreen)
+After=graphical.target
+
+[Service]
+User=kiosk
+Environment=DISPLAY=:0
+ExecStartPre=/bin/sh -c 'until xset q >/dev/null 2>&1; do sleep 1; done'
+ExecStart=/usr/bin/chromium-browser \
+  --kiosk \
+  --noerrdialogs \
+  --disable-infobars \
+  --disable-session-crashed-bubble \
+  --disable-features=Translate \
+  --autoplay-policy=no-user-gesture-required \
+  --use-fake-ui-for-media-stream \
+  --use-fake-device-for-media-stream \
+  --start-fullscreen \
+  http://localhost
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical.target

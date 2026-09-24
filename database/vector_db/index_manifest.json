@@ -1,0 +1,7 @@
+{
+  "index_type": "BM25_Dense_Hybrid",
+  "dimension": 384,
+  "total_vectors": 50,
+  "offline_ready": true,
+  "status": "ready"
+}

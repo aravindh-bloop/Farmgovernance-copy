@@ -1,0 +1,20 @@
+# systemd unit — Multilingual Cooperative Assistant Backend (FastAPI)
+# Install: sudo cp deploy/backend.service /etc/systemd/system/
+#          sudo systemctl daemon-reload && sudo systemctl enable --now backend
+
+[Unit]
+Description=Cooperative Assistant FastAPI Backend (port 8000)
+After=network.target
+
+[Service]
+Type=simple
+# Adjust User and paths to match the kiosk machine
+User=kiosk
+WorkingDirectory=/opt/coop-assistant
+ExecStart=/opt/coop-assistant/.venv/bin/python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --workers 2
+Restart=always
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target
