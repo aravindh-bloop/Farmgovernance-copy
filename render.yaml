@@ -20,6 +20,8 @@ services:
         value: gemini
       - key: OFFLINE_MODE
         value: "false"
+      - key: ENABLE_DENSE_SEARCH
+        value: "false"         # skip chromadb/torch init + model download at startup (keyword retrieval still works)
       - key: GEMINI_API_KEY
         sync: false            # set in Render dashboard → Environment
       - key: GROQ_API_KEY

@@ -19,6 +19,18 @@ class VectorSearchEngine:
     def __init__(self):
         self.chroma_available = False
         self.indexed_docs: List[Dict[str, Any]] = []
+        dense_env = os.getenv("ENABLE_DENSE_SEARCH", "true").lower()
+        self.dense_enabled = dense_env in ("1", "true", "yes")
+        self._dense_attempted = False
+        self.client = None
+        self.collection = None
+        self.model = None
+        self._auto_load_default_docs()
+
+    def _ensure_dense(self) -> bool:
+        if self.chroma_available or self._dense_attempted or not self.dense_enabled:
+            return self.chroma_available
+        self._dense_attempted = True
         try:
             import chromadb
             from sentence_transformers import SentenceTransformer
@@ -28,8 +40,7 @@ class VectorSearchEngine:
             self.chroma_available = True
         except Exception:
             self.chroma_available = False
-
-        self._auto_load_default_docs()
+        return self.chroma_available
 
     def _auto_load_default_docs(self):
         source_files = [
@@ -61,7 +72,7 @@ class VectorSearchEngine:
 
     def search(self, query: str, domain_filter: Optional[str] = None, top_k: int = 4) -> List[Dict[str, Any]]:
         # 1. ChromaDB Dense Search if available
-        if self.chroma_available:
+        if self._ensure_dense() and self.chroma_available:
             try:
                 count = self.collection.count()
                 if count > 0:
