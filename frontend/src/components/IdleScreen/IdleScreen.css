@@ -1,0 +1,130 @@
+.idle-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10000; /* Above everything */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  background-color: #000;
+}
+
+.idle-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/idle-bg.png'); /* The background image in public folder */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: brightness(0.7);
+  z-index: 1;
+}
+
+.idle-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: fadeIn 1s ease-out;
+}
+
+.idle-content h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.idle-content p {
+  font-size: 1.5rem;
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* Custom big voice button */
+.idle-voice-button {
+  position: relative;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 50%;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 2rem;
+}
+
+.idle-voice-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 15px 35px rgba(16, 185, 129, 0.6);
+}
+
+.idle-mic-icon {
+  color: white;
+  z-index: 2;
+  position: relative;
+}
+
+/* Ripples */
+.idle-mic-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(16, 185, 129, 0.5);
+  z-index: 1;
+  animation: ripple 2s infinite ease-out;
+}
+
+.idle-mic-ring.delay-1 {
+  animation-delay: 1s;
+}
+
+@keyframes ripple {
+  0% {
+    width: 120px;
+    height: 120px;
+    opacity: 1;
+  }
+  100% {
+    width: 240px;
+    height: 240px;
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
