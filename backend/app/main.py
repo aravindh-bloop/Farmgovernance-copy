@@ -43,7 +43,24 @@ async def health_check():
         "status": "healthy",
         "app": settings.APP_NAME,
         "offline_edge_mode": settings.OFFLINE_MODE,
-        "version": settings.APP_VERSION
+        "version": settings.APP_VERSION,
+        # Readiness only — never the keys themselves — so a deploy can be
+        # verified with one GET instead of guessing from chat replies.
+        "providers": {
+            "primary": settings.DEFAULT_LLM_PROVIDER,
+            "sarvam": {
+                "configured": bool(getattr(settings, "SARVAM_API_KEY", None)),
+                "model": getattr(settings, "SARVAM_LLM_MODEL", None),
+            },
+            "groq": {
+                "configured": bool(getattr(settings, "GROQ_API_KEY", None)),
+                "model": getattr(settings, "GROQ_MODEL", None),
+            },
+            "bhashini": {
+                "configured": bool(getattr(settings, "BHASHINI_USER_ID", None)
+                                   and getattr(settings, "BHASHINI_INFERENCE_API_KEY", None)),
+            },
+        },
     }
 
 if __name__ == "__main__":
