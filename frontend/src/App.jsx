@@ -146,7 +146,7 @@ function AppContent() {
       )}
 
       <footer className="app-footer">
-        Smart India Hackathon 2026 • Team BRAVITS (PS ID: SIH26088)
+        Smart India Hackathon 2026 • Team Synacle (PS ID: SIH26088)
       </footer>
     </div>
   );

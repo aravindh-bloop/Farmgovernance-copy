@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
-    host: true
+    host: true,
+    allowedHosts: ["cos-hat-comic-hist.trycloudflare.com"]
   }
 })
