@@ -83,7 +83,7 @@ class TranslationEngine:
             }
         }
 
-    def _translate_segment(self, text: str, target_lang: str) -> str:
+    def _translate_segment(self, text: str, target_lang: str, source_lang: str = "en") -> str:
         """Translates a clean single text segment preserving numbers and punctuation."""
         if not text or not text.strip():
             return text
@@ -93,7 +93,7 @@ class TranslationEngine:
             return self._cache[cache_key]
 
         try:
-            url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl={target_lang}&dt=t&q={urllib.parse.quote(text)}"
+            url = f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={source_lang}&tl={target_lang}&dt=t&q={urllib.parse.quote(text)}"
             req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
             with urllib.request.urlopen(req, timeout=4) as response:
                 raw_data = json.loads(response.read().decode("utf-8"))
@@ -106,15 +106,37 @@ class TranslationEngine:
 
         return text
 
+    @staticmethod
+    def _resolve_source_lang(text: str, source_lang: str) -> str:
+        """
+        MT providers need a real source code. "auto"/unknown is resolved from the
+        script actually present in the text, otherwise treated as English.
+        """
+        lang = (source_lang or "").lower()
+        if lang and lang not in ("auto", "unknown", "und", "none"):
+            return lang
+        scripts = (
+            ("ta", 0x0B80, 0x0BFF), ("te", 0x0C00, 0x0C7F), ("kn", 0x0C80, 0x0CFF),
+            ("ml", 0x0D00, 0x0D7F), ("bn", 0x0980, 0x09FF), ("gu", 0x0A80, 0x0AFF),
+            ("pa", 0x0A00, 0x0A7F), ("or", 0x0B00, 0x0B7F), ("hi", 0x0900, 0x097F),
+        )
+        for code, low, high in scripts:
+            if any(low <= ord(ch) <= high for ch in text):
+                return code
+        return "en"
+
     def translate(self, text: str, source_lang: str, target_lang: str) -> str:
         """
-        Translates markdown content into the target Indian language while preserving markdown formatting,
+        Translates markdown content into the target language while preserving markdown formatting,
         emojis, statutory citations, URLs, and numbers.
 
         Provider priority: Bhashini (Govt. pipeline) → Sarvam Mayura → Google gtx.
+        Works in both directions, including into English, so a reply that comes
+        back in the wrong script can be corrected instead of shown as-is.
         """
-        if not text or source_lang == target_lang or target_lang == "en":
+        if not text or source_lang == target_lang:
             return text
+        source_lang = self._resolve_source_lang(text, source_lang)
 
         # 1. Apply high-priority glossary replacements
         processed = text
@@ -164,8 +186,11 @@ class TranslationEngine:
             # Check if line already has Indic characters (Tamil, Devanagari, Telugu, Kannada, etc.)
             has_indic = any('\u0900' <= char <= '\u0DFF' or '\u0B80' <= char <= '\u0BFF' for char in line)
 
-            # If line is primarily in English, translate the text content
-            if not has_indic or len(re.findall(r'[a-zA-Z]{4,}', line)) >= 3:
+            # Translate when the line needs it. Into English an Indic line is
+            # exactly what needs translating; out of English a bare Indic line
+            # is usually an already-correct scheme name.
+            to_english = target_lang == "en"
+            if to_english or not has_indic or len(re.findall(r'[a-zA-Z]{4,}', line)) >= 3:
                 # Handle bullet points
                 prefix = ""
                 content = line
@@ -189,12 +214,17 @@ class TranslationEngine:
                     body_part = bold_match.group(2)
 
                     # Translate header and body
-                    tr_header = self._translate_segment(header_part.replace("**", "").replace(":", ""), target_lang)
-                    tr_body = self._translate_segment(body_part, target_lang) if body_part.strip() else ""
+                    tr_header = self._translate_segment(
+                        header_part.replace("**", "").replace(":", ""), target_lang, source_lang
+                    )
+                    tr_body = (
+                        self._translate_segment(body_part, target_lang, source_lang)
+                        if body_part.strip() else ""
+                    )
 
                     translated_lines.append(f"{prefix}**{tr_header}:** {tr_body}".strip())
                 else:
-                    tr_content = self._translate_segment(content, target_lang)
+                    tr_content = self._translate_segment(content, target_lang, source_lang)
                     translated_lines.append(f"{prefix}{tr_content}")
             else:
                 translated_lines.append(line)

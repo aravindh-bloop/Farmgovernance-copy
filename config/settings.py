@@ -17,11 +17,11 @@ try:
         ]
         DEFAULT_LANGUAGE: str = "en"
         OFFLINE_MODE: bool = True
-        DEFAULT_LLM_PROVIDER: str = "gemini"
+        DEFAULT_LLM_PROVIDER: str = "sarvam"
         GROQ_API_KEY: Optional[str] = None
         GROQ_MODEL: str = "qwen/qwen3.8-27b"
-        GEMINI_API_KEY: Optional[str] = None
         SARVAM_API_KEY: Optional[str] = None
+        SARVAM_LLM_MODEL: str = "sarvam-105b-conversations"
         OPENAI_API_KEY: Optional[str] = None
         BHASHINI_API_KEY: Optional[str] = None
         BHASHINI_USER_ID: Optional[str] = None
@@ -49,11 +49,11 @@ except ImportError:
         SUPPORTED_LANGUAGES = ["en", "hi", "ta", "te", "mr", "gu", "bn", "kn", "ml", "pa", "or"]
         DEFAULT_LANGUAGE = "en"
         OFFLINE_MODE = True
-        DEFAULT_LLM_PROVIDER = "gemini"
+        DEFAULT_LLM_PROVIDER = "sarvam"
         GROQ_API_KEY = os.getenv("GROQ_API_KEY")
         GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
-        GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
         SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
+        SARVAM_LLM_MODEL = os.getenv("SARVAM_LLM_MODEL", "sarvam-105b-conversations")
         OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
         BHASHINI_API_KEY = os.getenv("BHASHINI_API_KEY")
         BHASHINI_USER_ID = os.getenv("BHASHINI_USER_ID")

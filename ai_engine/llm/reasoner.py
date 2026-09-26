@@ -1,5 +1,6 @@
 """
-LLM Reasoner with multi-backend support: Gemini, Groq, and Edge Rule-Grounded Synthesis.
+LLM Reasoner with multi-backend support: Sarvam (primary), Groq (support), and
+Edge Rule-Grounded Synthesis for offline degradation.
 Guarantees graceful degradation — when no external provider is reachable, the system
 still produces grounded answers from the verified database (never fabricates facts).
 
@@ -19,28 +20,32 @@ from config.settings import settings
 
 
 class LLMReasoner:
-    # Gemini free tier is ~20 requests/minute per model, so identical questions
-    # are served from this short-lived cache instead of burning quota.
+    # Identical questions are served from this short-lived cache, which keeps the
+    # provider rate limits free for genuinely new questions.
     _CACHE_TTL_SECONDS = 900
     _CACHE_MAX_ENTRIES = 200
 
     def __init__(self):
         self.provider = settings.DEFAULT_LLM_PROVIDER
+        self.sarvam_key = settings.SARVAM_API_KEY or os.getenv("SARVAM_API_KEY")
+        # The conversations variant answers directly; the base model spends its
+        # budget on hidden reasoning and can return an empty message.
+        self.sarvam_model = getattr(settings, "SARVAM_LLM_MODEL", None) or os.getenv(
+            "SARVAM_LLM_MODEL") or "sarvam-105b-conversations"
         self.groq_key = settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY")
         # Qwen 3.8-27B: fastest on Groq and the strongest of the free models on
         # Indian languages (Tamil/Telugu/Marathi), which the kiosk depends on.
         self.groq_model = getattr(settings, "GROQ_MODEL", None) or os.getenv("GROQ_MODEL") or "qwen/qwen3.8-27b"
-        self.gemini_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
         self._cache: "OrderedDict[str, tuple]" = OrderedDict()
         self._cache_lock = threading.Lock()
 
         self._greeting_patterns = [
             r"\bhello\b", r"\bhi\b", r"\bhey\b", r"\bnamaste\b", r"\bnamaskar\b",
-            r"\bvanakkam\b", r"नमस्ते", r"नमस्कार", r"வணக்கம்", r"నమస్తే",
+            r"\bvanakkam\b", "नमस्ते", "नमस्कार", "வணக்கம்", "నమస్తే",
             r"\bgood morning\b", r"\bgood evening\b", r"\bgood afternoon\b",
-            r"\bthanks?\b", r"thank you", r"धन्यवाद", r"நன்றி", r"ధన్యవాదాలు",
+            r"\bthanks?\b", r"thank you", "धन्यवाद", "நன்றி", "ధన్యవాదాలు",
             r"\bwho are you\b", r"what are you", r"\bwhat can you do\b",
-            r"\bhelp\b", r"मदद", r"உதவி", r"సహాయం", r"\bstart\b",
+            r"\bhelp\b", "मदद", "உதவி", "సహాయం", r"\bstart\b",
         ]
 
     # ------------------------------------------------------------------
@@ -48,8 +53,8 @@ class LLMReasoner:
     # ------------------------------------------------------------------
     def generate_response(self, prompt: str, context_docs: List[Dict[str, Any]], domain: str, language: str = "en") -> str:
         if self._llm_enabled():
-            if self.gemini_key:
-                answer = self._try_gemini(prompt, language)
+            if self.sarvam_key:
+                answer = self._try_sarvam(prompt, language)
                 if answer:
                     return answer
             if self.groq_key:
@@ -68,12 +73,13 @@ class LLMReasoner:
         LLM-first chatbot: the LLM both understands the query and writes the
         answer, grounded on the light-RAG ``docs`` when provided.
 
-        Provider order: Gemini -> Groq -> offline edge synthesis, so a transient
-        429/503 from one provider never degrades the conversation.
+        Provider order: Sarvam (primary, best on Indian languages) -> Groq
+        (support) -> offline edge synthesis, so a throttled or unreachable
+        provider never ends the conversation.
         """
         if self._llm_enabled():
-            if self.gemini_key:
-                answer = self._try_gemini_chat(messages, system_prompt, language)
+            if self.sarvam_key:
+                answer = self._try_sarvam_chat(messages, system_prompt, language)
                 if answer:
                     return answer
             if self.groq_key:
@@ -118,16 +124,8 @@ class LLMReasoner:
             "{language}, never in English. Keep official names and URLs in English where appropriate."
         )
 
-    @staticmethod
-    def _parse_gemini(payload: Dict[str, Any]) -> str:
-        candidates = payload.get("candidates", []) or []
-        if not candidates:
-            return ""
-        parts = (candidates[0].get("content", {}) or {}).get("parts", []) or []
-        return "".join(part.get("text", "") for part in parts).strip()
-
-    _GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent"
-    _RETRY_STATUSES = (500, 502, 503, 504)
+    _SARVAM_URL = "https://api.sarvam.ai/v1/chat/completions"
+    _RETRY_STATUSES = (429, 500, 502, 503, 504)
 
     def _cache_get(self, key: str) -> str:
         with self._cache_lock:
@@ -156,79 +154,72 @@ class LLMReasoner:
             json.dumps(payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
         ).hexdigest()
 
-    @staticmethod
-    def _inline_system_prompt(payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Move systemInstruction text into the first user turn (400 fallback)."""
-        system_text = ""
-        parts = payload.get("systemInstruction", {}).get("parts", [])
-        if parts:
-            system_text = parts[0].get("text", "")
-
-        new_payload = {k: v for k, v in payload.items() if k != "systemInstruction"}
-        contents = new_payload.get("contents", [])
-        if system_text and contents:
-            first = contents[0]
-            first_text = "".join(p.get("text", "") for p in first.get("parts", []))
-            merged = f"{system_text}\n\n---\n{first_text}"
-            contents[0] = {"role": first.get("role", "user"), "parts": [{"text": merged}]}
-        return new_payload
-
-    def _post_gemini(self, payload: Dict[str, Any], attempts: int = 3) -> str:
-        """POST to Gemini with backoff on transient 5xx, and a short cache."""
+    def _post_sarvam(self, messages: List[Dict[str, str]], temperature: float = 0.3,
+                     attempts: int = 3) -> str:
+        """
+        Sarvam LLM (primary provider). Same OpenAI-compatible shape as Groq, so
+        answers, reasoning fallbacks and caching are handled identically.
+        """
         import httpx
 
-        cache_key = self._cache_key(payload)
+        cache_key = "sarvam:" + self._cache_key({"model": self.sarvam_model, "messages": messages})
         cached = self._cache_get(cache_key)
         if cached:
             return cached
 
-        last_error = ""
-        backoff = (2.0, 5.0)
-        inlined = False
         for attempt in range(attempts):
             try:
                 response = httpx.post(
-                    self._GEMINI_URL,
-                    params={"key": self.gemini_key},
-                    json=payload,
+                    self._SARVAM_URL,
+                    headers={
+                        "Authorization": f"Bearer {self.sarvam_key}",
+                        "User-Agent": "cooperative-assistant/1.0",
+                    },
+                    json={
+                        "model": self.sarvam_model,
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": 1500,
+                    },
                     timeout=45.0,
                 )
+                if response.status_code == 200:
+                    payload = response.json()
+                    message = (payload.get("choices") or [{}])[0].get("message", {}) or {}
+                    # Reasoning models can return the answer in `reasoning_content`
+                    # with an empty `content`; keep whichever has text.
+                    answer = (
+                        (message.get("content") or "").strip()
+                        or (message.get("reasoning_content") or "").strip()
+                    )
+                    self._cache_put(cache_key, answer)
+                    return answer
                 if response.status_code == 429:
-                    # Per-minute quota exhausted: fail over to the next provider
-                    # immediately instead of making the farmer wait.
-                    print("Gemini quota exhausted (429) — trying the next provider.")
-                    break
+                    # Quota/rate limit: retrying immediately just makes the
+                    # farmer wait, so hand over to the next provider now.
+                    print("Sarvam rate limited (429) — failing over to the next provider.")
+                    return ""
                 if response.status_code in self._RETRY_STATUSES:
-                    last_error = f"HTTP {response.status_code}"
-                    time.sleep(backoff[min(attempt, len(backoff) - 1)])
+                    time.sleep(1.5 * (attempt + 1))
                     continue
-                if response.status_code == 400 and "systemInstruction" in payload and not inlined:
-                    # Some deployments reject the systemInstruction field: inline it
-                    # into the first user turn instead of losing the whole answer.
-                    inlined = True
-                    payload = self._inline_system_prompt(payload)
-                    continue
-                response.raise_for_status()
-                answer = self._parse_gemini(response.json())
-                self._cache_put(cache_key, answer)
-                return answer
+                print(f"Sarvam returned HTTP {response.status_code}: {response.text[:200]}")
+                return ""
             except Exception as exc:
-                last_error = str(exc)
-                time.sleep(backoff[min(attempt, len(backoff) - 1)])
-        if last_error:
-            print(f"Gemini API call failed (falling back): {last_error}")
+                print(f"Sarvam API call failed (falling back): {exc}")
+                return ""
+        print("Sarvam unavailable after retries (falling back).")
         return ""
 
-    def _try_gemini(self, prompt: str, language: str) -> str:
-        return self._post_gemini({
-            "contents": [{"parts": [{"text": self._apply_language_instruction(prompt, language)}]}],
-            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2048},
-        })
+    def _try_sarvam(self, prompt: str, language: str) -> str:
+        return self._post_sarvam(
+            [{"role": "user", "content": self._apply_language_instruction(prompt, language)}],
+            temperature=0.2,
+        )
 
     _GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
     def _post_groq(self, messages: List[Dict[str, str]], temperature: float = 0.3, attempts: int = 3) -> str:
-        """Groq chat completion with caching. Primary failover when Gemini is throttled."""
+        """Groq chat completion with caching. Support provider when Sarvam is unavailable."""
         import time
 
         import httpx
@@ -280,7 +271,7 @@ class LLMReasoner:
 
     @staticmethod
     def _normalize_turns(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Coerce frontend history into Gemini-agnostic user/model turns."""
+        """Coerce frontend history into provider-agnostic user/assistant turns."""
         turns = []
         for m in messages or []:
             if not isinstance(m, dict):
@@ -300,18 +291,11 @@ class LLMReasoner:
             turns.append({"role": role, "content": content})
         return turns[-8:]  # conversational window guard
 
-    def _try_gemini_chat(self, messages: List[Dict[str, Any]], system_prompt: str, language: str) -> str:
-        contents = []
+    def _try_sarvam_chat(self, messages: List[Dict[str, Any]], system_prompt: str, language: str) -> str:
+        payload = [{"role": "system", "content": system_prompt}]
         for turn in self._normalize_turns(messages):
-            contents.append({
-                "role": "model" if turn["role"] == "assistant" else "user",
-                "parts": [{"text": turn["content"]}],
-            })
-        return self._post_gemini({
-            "systemInstruction": {"parts": [{"text": system_prompt}]},
-            "contents": contents,
-            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2048},
-        })
+            payload.append({"role": turn["role"], "content": turn["content"]})
+        return self._post_sarvam(payload)
 
     def _try_groq_chat(self, messages: List[Dict[str, Any]], system_prompt: str, language: str) -> str:
         payload = [{"role": "system", "content": system_prompt}]

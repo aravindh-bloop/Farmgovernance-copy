@@ -1,7 +1,7 @@
 """
 LLM-First Conversational Pipeline.
 
-The LLM (Gemini) understands every query — language, intent, and follow-ups —
+The LLM (Sarvam, then Groq) understands every query — language, intent, and follow-ups —
 and writes the answer. Light-RAG retrieval is used only to GROUND the answer
 with verified reference documents; catalog-heavy sub-model engines are no
 longer part of the chat flow. Out of the box the assistant remains fully
@@ -59,6 +59,40 @@ class RAGPipeline:
         ascii_chars = sum(1 for ch in printable if ord(ch) < 128)
         return (ascii_chars / len(printable)) > 0.95
 
+    # Script blocks for the Indic languages the assistant serves.
+    _SCRIPT_RANGES = {
+        "hi": (0x0900, 0x097F), "mr": (0x0900, 0x097F),
+        "ta": (0x0B80, 0x0BFF), "te": (0x0C00, 0x0C7F), "kn": (0x0C80, 0x0CFF),
+        "ml": (0x0D00, 0x0D7F), "bn": (0x0980, 0x09FF), "gu": (0x0A80, 0x0AFF),
+        "pa": (0x0A00, 0x0A7F), "or": (0x0B00, 0x0B7F),
+    }
+
+    @staticmethod
+    def _has_indic_script(text: str) -> bool:
+        return any(
+            any(RAGPipeline._SCRIPT_RANGES[code][0] <= ord(ch) <= RAGPipeline._SCRIPT_RANGES[code][1]
+                for code in RAGPipeline._SCRIPT_RANGES)
+            for ch in text
+        )
+
+    def _align_language(self, answer: str, language: str) -> str:
+        """
+        Indian LLMs sometimes answer in the wrong script. If the reply does not
+        match the language the user is reading, translate it through the
+        Bhashini -> Sarvam -> Google chain rather than showing the wrong script.
+        """
+        if not answer or not language:
+            return answer
+        lang = language.lower()
+        indic_returned = self._has_indic_script(answer)
+        if lang == "en" and indic_returned:
+            translated = self.translator.translate(answer, "auto", "en")
+            return translated.strip() if translated else answer
+        if lang != "en" and self._is_ascii(answer):
+            translated = self.translator.translate(answer, "en", lang)
+            return translated.strip() if translated else answer
+        return answer
+
     def process_query(self, query: str, language: str = "en", history: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         # Auto-detect language from query text if Indic script characters are present
         if query and query.strip():
@@ -93,12 +127,8 @@ class RAGPipeline:
             if not answer:
                 answer = self._no_record_message(language)
 
-        # 4. Guard against English leakage: if the requested language needs a
-        #    non-Latin script and the model returned Latin text, translate it.
-        if language and language != "en" and answer and self._is_ascii(answer):
-            translated = self.translator.translate(answer, "en", language)
-            if translated:
-                answer = translated.strip()
+        # 4. Make sure the reply is in the script the user is actually reading.
+        answer = self._align_language(answer, language)
 
         # 5. Resolution procedure for complaints / redressal queries.
         procedure = None

@@ -165,6 +165,29 @@ Your mandate:
             "topics above."
         ).format(query=query, language=language)
 
+    LANGUAGE_NAMES = {
+        "en": "English", "hi": "Hindi", "ta": "Tamil", "te": "Telugu",
+        "mr": "Marathi", "kn": "Kannada", "ml": "Malayalam", "bn": "Bengali",
+        "gu": "Gujarati", "pa": "Punjabi", "or": "Odia",
+    }
+
+    @classmethod
+    def _language_rule(cls, language: str) -> str:
+        """Name the target language explicitly — providers otherwise default to Hindi."""
+        name = cls.LANGUAGE_NAMES.get((language or "en").lower(), language or "English")
+        rule = (
+            f"1. LANGUAGE: Write the ENTIRE reply in {name} (ISO 639-1 '{language}') using its native "
+            f"script. Do not mix in other languages. Official scheme names like PM-KISAN, KCC, PACS, PMFBY "
+            f"may stay in English."
+        )
+        if (language or "en").lower() == "en":
+            # Indian LLMs drift to Hindi on English questions unless told not to.
+            rule += (
+                " The user is speaking ENGLISH, so answer ONLY in English using the Latin alphabet. "
+                "Do NOT answer in Hindi or any other Indian language."
+            )
+        return rule
+
     @classmethod
     def build_assistant_system(cls, language: str = "en", context_docs: List[Dict[str, Any]] = None,
                                authorities: List[Dict[str, Any]] = None) -> str:
@@ -197,16 +220,12 @@ Your mandate:
                 if line:
                     formatted_authorities += f"- {line}\n"
 
+        language_rule = cls._language_rule(language)
         system = (
             "You are the friendly Multilingual Cooperative Assistant for Indian farmers, cooperative "
             "societies (PACS), and rural citizens under the Ministry of Cooperation.\n\n"
             "RULES:\n"
-            "1. Always write the ENTIRE reply in the user's language, using its native script (ISO 639-1 "
-            "code: "
-        )
-        system += language
-        system += (
-            "). Official scheme names like PM-KISAN, KCC, PACS, PMFBY may stay in English.\n"
+            f"{language_rule}\n"
             "2. Write like you are talking to a farmer: plain words, short sentences, first give the most "
             "important answer, then the supporting detail. Keep the whole reply to about 5-8 short sentences "
             "unless the user asks for details.\n"

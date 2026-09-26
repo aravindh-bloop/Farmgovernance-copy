@@ -49,7 +49,10 @@ async def handle_tts(payload: TTSRequest):
         tts_res = text_to_speech(clean_text, target_lang, play_audio=False)
         if not tts_res.ok or not tts_res.audio_bytes:
             raise HTTPException(status_code=500, detail=tts_res.error or "TTS synthesis failed")
-        return Response(content=tts_res.audio_bytes, media_type="audio/mpeg")
+        # The engine returns decoded PCM (WAV), not the raw MP3 the provider sent,
+        # so declare audio/wav — a wrong Content-Type stops strict players from
+        # playing the reply at all.
+        return Response(content=tts_res.audio_bytes, media_type="audio/wav")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
