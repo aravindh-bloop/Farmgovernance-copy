@@ -291,16 +291,26 @@ export default function ChatInterface({
 
     setAudioState({ messageId, status: 'loading' });
 
+    // Safety guard: never allow the "Generating Voice..." spinner to hang forever.
+    setTimeout(() => {
+      setAudioState((prev) =>
+        prev.messageId === messageId && prev.status === 'loading'
+          ? { messageId: null, status: 'idle' }
+          : prev
+      );
+    }, 18000);
+
     const cleanText = text.replace(/[#*`📌⚠️🏛️🌾⚖️💳🛡️💊🚜📲🏗️💻🧮📊🔒•]/g, '').trim();
     // Prefer the user's chosen language for neural TTS; only sniff the script
     // when the choice is English. This stops Devanagari answers (hi/mr) always
     // being read as Hindi.
     const effectiveLang =
       langCode && langCode !== 'en' ? langCode : detectScriptLanguage(cleanText);
+    const speakText = cleanText.slice(0, 230);
 
     try {
       // Fetch Pure Native Voice from Backend (/api/v1/chat/tts)
-      const audioUrl = await fetchTTSAudio(cleanText, effectiveLang);
+      const audioUrl = await fetchTTSAudio(speakText, effectiveLang);
       if (audioUrl) {
         const audio = new Audio(audioUrl);
         audio.playbackRate = 1.0;
@@ -318,7 +328,7 @@ export default function ChatInterface({
         };
         audio.onerror = () => {
           console.warn('Backend audio element playback error, falling back to Web Speech');
-          fallbackSpeechSynthesis(messageId, cleanText, effectiveLang);
+          fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
         };
 
         try {
@@ -326,16 +336,16 @@ export default function ChatInterface({
           return;
         } catch (playErr) {
           console.warn('Audio play failed, falling back to Web Speech:', playErr);
-          fallbackSpeechSynthesis(messageId, cleanText, effectiveLang);
+          fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
           return;
         }
       }
 
       // If backend TTS did not return audio, fall back directly to Web Speech Synthesis
-      fallbackSpeechSynthesis(messageId, cleanText, effectiveLang);
+      fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
     } catch (err) {
       console.warn('Backend TTS playback failed, using Web Speech fallback:', err);
-      fallbackSpeechSynthesis(messageId, cleanText, effectiveLang);
+      fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
     }
   };
 

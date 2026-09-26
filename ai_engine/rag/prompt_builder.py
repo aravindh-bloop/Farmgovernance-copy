@@ -76,6 +76,64 @@ Your mandate:
         return prompt
 
     @classmethod
+    def build_generate_prompt(cls, query: str, context_docs: List[Dict[str, Any]], language: str = "en",
+                              domain: str = "general", authorities: List[Dict[str, Any]] = None) -> str:
+        """
+        Prompt for the RAG-assisted generation path. Unlike the strict verified-only
+        prompt, this one lets the model answer *any* question: it grounds itself on the
+        retrieved context when available, and otherwise uses sound general knowledge of
+        Indian cooperative law & agriculture schemes — clearly flagging what is general
+        guidance vs. a verified record. This is what lets a "What is a PACS?" or
+        "How do I become a member?" question get a real answer.
+        """
+        formatted_context = ""
+        for i, doc in enumerate(context_docs, 1):
+            title = doc.get("title") or doc.get("scheme_name") or doc.get("act_name") or "Document"
+            summary = doc.get("summary") or doc.get("overview") or doc.get("financial_benefit") or ""
+            provisions = doc.get("key_provisions") or doc.get("eligibility_criteria") or doc.get("permitted_activities") or []
+            citations = doc.get("citations", [])
+
+            formatted_context += f"\n--- Context Document {i}: {title} ---\n"
+            formatted_context += f"Summary/Benefit: {summary}\n"
+            if provisions:
+                formatted_context += f"Details: {', '.join(provisions[:4])}\n"
+            if citations:
+                formatted_context += f"Official Citations: {', '.join(citations)}\n"
+
+        formatted_authorities = ""
+        if authorities:
+            for a in authorities:
+                line = cls._format_authority(a)
+                if line:
+                    formatted_authorities += f"- {line}\n"
+
+        prompt = (
+            "You are an expert AI Legal & Governance Assistant for India's Cooperative Societies, Farmers, "
+            "PACS, and Rural Citizens under the Ministry of Cooperation.\n\n"
+            "CONTEXT START\n"
+            f"{formatted_context}"
+            "CONTEXT END\n\n"
+            "Instructions:\n"
+            "1. Answer the user's question completely and helpfully. If it is a cooperative / agriculture / "
+            "scheme / grievance question, explain the process, eligibility, required documents and, where "
+            "applicable, the officer to approach.\n"
+            "2. Prefer facts found in the CONTEXT above. Where the CONTEXT is missing a detail the user asked "
+            "for, you MAY use general knowledge of Indian cooperative law and government schemes — label such "
+            "parts with '(General guidance — please confirm with your local PACS/ARCS)'.\n"
+            "3. Never invent a specific officer's name, phone number, email, or a specific figure as official. "
+            "If the CONTEXT or the CONCERNED AUTHORITY section provides them, use them exactly; otherwise "
+            "suggest the local Assistant Registrar of Cooperative Societies (ARCS) or PACS Secretary.\n"
+            "4. Write the ENTIRE response in the language whose ISO 639-1 code is '{language}', in its native "
+            "script (official names/URLs may stay in English).\n"
+            "5. Structure the answer with clear headings: Key Points, Recommended Action, and (if any) "
+            "Official Citations.\n"
+        )
+        if formatted_authorities:
+            prompt += f"\nCONCERNED AUTHORITY (use exactly as given, do not alter or invent):\n{formatted_authorities}\n"
+        prompt += f"\nUSER QUERY:\n{query}\n"
+        return prompt.format(query=query, language=language)
+
+    @classmethod
     def build_greeting_prompt(cls, query: str, language: str = "en") -> str:
         return (
             "You are the Multilingual Cooperative Assistant for Indian farmers, cooperative societies and rural "

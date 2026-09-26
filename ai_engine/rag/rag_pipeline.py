@@ -42,6 +42,21 @@ class RAGPipeline:
                     ans = translated
         return ans.strip()
 
+    def _answer_generate(self, query: str, language: str, domain: str,
+                         docs: List[Dict[str, Any]], authorities: List[Dict[str, Any]]) -> str:
+        """
+        RAG-assisted LLM generation for any question the verified catalogs didn't
+        match. Grounds on retrieved context when available, otherwise allows the
+        LLM to use general knowledge of Indian cooperative law & schemes. Returns
+        "" if the LLM is unreachable (no hallucinated filler).
+        """
+        prompt = PromptBuilder.build_generate_prompt(query, docs[:3], language, domain, authorities)
+        ans = self.reasoner.generate_response(prompt, docs, domain or "general", language)
+        ans = (ans or "").strip()
+        if not ans or ans.startswith("I could not find") or ans.startswith("No matching official"):
+            return ""
+        return ans
+
     def _no_record_message(self, language: str) -> str:
         msg = (
             "I could not find a verified official record matching your question in the database. "
@@ -113,27 +128,25 @@ class RAGPipeline:
                     domain_contexts[dom] = [primary_doc]
                 citations.extend(dom_citations)
 
-        # 3. Greetings & general chat — answered directly by the LLM (never by a sub-model default)
+        # 3. Greetings — warm LLM answer. Never a canned PM-KISAN dump.
         is_greeting = self.reasoner.is_greeting(query)
         if is_greeting:
             if "general" not in active_domains:
                 active_domains = active_domains + ["general"]
             domain_answers["general"] = self._answer_general(query, language)
             domain_contexts["general"] = []
-        elif "general" in active_domains and "general" not in domain_answers:
-            # Unmatched content query — honest pointer, in the user's language.
-            domain_answers["general"] = self._no_record_message(language)
-            domain_contexts["general"] = []
 
-        # 4. No verified record matched anywhere → graceful, honest response (no canned defaults)
+        # 4. ANY question the verified catalogs couldn't answer gets a real answer
+        #    via the RAG+LLM generate path (general knowledge allowed, grounded on
+        #    retrieved records when available). Degrade to the honest no-record
+        #    message ONLY when the LLM itself is unreachable/offline.
+        if not is_greeting and primary_domain not in domain_answers:
+            generated = self._answer_generate(query, language, primary_domain, all_docs, authorities)
+            if generated:
+                domain_answers[primary_domain] = generated
+                domain_contexts[primary_domain] = all_docs[:2]
         if not domain_answers:
-            fallback_ans = self.reasoner.generate_response(
-                PromptBuilder.build_rag_prompt(query, all_docs[:3], language),
-                all_docs[:3], primary_domain, language
-            )
-            if not fallback_ans or fallback_ans.startswith("I could not find") or fallback_ans.startswith("No matching official"):
-                fallback_ans = self._no_record_message(language)
-            domain_answers[primary_domain] = fallback_ans
+            domain_answers[primary_domain] = self._no_record_message(language)
             domain_contexts[primary_domain] = all_docs[:2]
 
         # 5. Post-LLM Multi-Domain Database Cross-Verification & Fusion

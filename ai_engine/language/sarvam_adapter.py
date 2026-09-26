@@ -10,6 +10,7 @@ import httpx
 from config.settings import settings
 from .config import DEFAULT_SAMPLE_RATE, SUPPORTED_LANGUAGES
 from .interfaces import AudioInput, STTBackend, STTResult, TTSBackend, TTSResult
+from .text_to_speech import clean_speech_text
 
 _BASE_URL = "https://api.sarvam.ai"
 
@@ -105,12 +106,15 @@ class SarvamTTSBackend(TTSBackend):
             return TTSResult(b"", DEFAULT_SAMPLE_RATE, language, self.name, error="Empty text")
 
         target_code = to_sarvam_code(language)
+        spoken = clean_speech_text(text, max_chars=230)
+        if not spoken:
+            spoken = text.strip()[:230]
         try:
             response = httpx.post(
                 f"{_BASE_URL}/text-to-speech",
                 headers={"api-subscription-key": _api_key(), "Content-Type": "application/json"},
                 json={
-                    "inputs": [text.strip()[:500]],
+                    "inputs": [spoken],
                     "target_language_code": target_code,
                     "speaker": "priya",
                     "model": "bulbul:v3",

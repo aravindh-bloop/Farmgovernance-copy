@@ -91,9 +91,25 @@ export default function ChatBox({ initialQuery = '' }) {
       langCode && langCode !== 'en' ? langCode : detectScriptLanguage(text) || language || 'en';
     setAudioState({ messageId, status: 'loading' });
 
+    // Safety guard: never allow the "Generating Voice..." spinner to hang forever.
+    setTimeout(() => {
+      setAudioState((prev) =>
+        prev.messageId === messageId && prev.status === 'loading'
+          ? { messageId: null, status: 'idle' }
+          : prev
+      );
+    }, 18000);
+
+    // Strip markdown/emoji and cap length so the neural TTS is fast & natural.
+    const speakText = text
+      .replace(/[#*`📌⚠️🏛️🌾⚖️💳🛡️💊🚜📲🏗️💻🧮📊🔒•]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 230);
+
     try {
-      // 1. Try Backend TTS Engine (/chat/tts) with detected Indic language
-      const audioUrl = await fetchTTSAudio(text, detectedLang);
+      // 1. Try Backend TTS Engine (/chat/tts) with clean spoken text
+      const audioUrl = await fetchTTSAudio(speakText, effectiveLang);
       if (audioUrl) {
         const audio = new Audio(audioUrl);
         audio.playbackRate = 1.0;
@@ -110,7 +126,7 @@ export default function ChatBox({ initialQuery = '' }) {
           currentAudioRef.current = null;
         };
         audio.onerror = () => {
-          fallbackSpeechSynthesis(messageId, text, detectedLang);
+          fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
         };
 
         try {
@@ -118,7 +134,7 @@ export default function ChatBox({ initialQuery = '' }) {
           return;
         } catch (playErr) {
           console.warn('Audio play failed, falling back to Web Speech:', playErr);
-          fallbackSpeechSynthesis(messageId, text, detectedLang);
+          fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
           return;
         }
       }
@@ -127,7 +143,7 @@ export default function ChatBox({ initialQuery = '' }) {
     }
 
     // Fallback: Web Speech API
-    fallbackSpeechSynthesis(messageId, text, detectedLang);
+    fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
   };
 
   const getVoiceForLanguage = (code) => {

@@ -88,7 +88,7 @@ class LLMReasoner:
                 params={"key": self.gemini_key},
                 json={
                     "contents": [{"parts": [{"text": self._apply_language_instruction(prompt, language)}]}],
-                    "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1500},
+                    "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2048},
                 },
                 timeout=35.0,
             )
