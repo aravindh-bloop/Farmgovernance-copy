@@ -9,6 +9,7 @@ class ChatRequest(BaseModel):
     language: Optional[str] = "en"
     domain: Optional[str] = None
     district: Optional[str] = None
+    history: Optional[List[Dict[str, Any]]] = None
 
 class CitationModel(BaseModel):
     citation_text: str

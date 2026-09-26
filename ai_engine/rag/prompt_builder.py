@@ -1,7 +1,26 @@
 """
 System prompt templates and context formatting for multilingual cooperative reasoning.
 """
+import re
 from typing import List, Dict, Any
+
+
+def _as_list(value: Any) -> List[str]:
+    """Coerce a provisions/benefits field into a list of readable strings.
+
+    Records store these either as a list or as one long string; a raw string
+    would otherwise be sliced character-by-character ("- S - m - a - l").
+    """
+    if not value:
+        return []
+    if isinstance(value, str):
+        parts = [p.strip(" -•\t") for p in re.split(r"[;\n]|(?<=[.!?])\s+", value)]
+        return [p for p in parts if p] or [value]
+    if isinstance(value, dict):
+        return [f"{k}: {v}" for k, v in value.items() if v]
+    if isinstance(value, (list, tuple)):
+        return [str(v) for v in value if v]
+    return [str(value)]
 
 class PromptBuilder:
     SYSTEM_PROMPT = """You are an expert AI Legal & Governance Assistant for India's Cooperative Societies, Farmers, Primary Agricultural Credit Societies (PACS), and Rural Citizens under the Ministry of Cooperation.
@@ -50,7 +69,7 @@ Your mandate:
         for i, doc in enumerate(context_docs, 1):
             title = doc.get("title") or doc.get("scheme_name") or doc.get("act_name") or "Document"
             summary = doc.get("summary") or doc.get("overview") or doc.get("financial_benefit") or ""
-            provisions = doc.get("key_provisions") or doc.get("eligibility_criteria") or doc.get("permitted_activities") or []
+            provisions = _as_list(doc.get("key_provisions") or doc.get("eligibility_criteria") or doc.get("permitted_activities"))
             citations = doc.get("citations", [])
 
             formatted_context += f"\n--- Context Document {i}: {title} ---\n"
@@ -90,7 +109,7 @@ Your mandate:
         for i, doc in enumerate(context_docs, 1):
             title = doc.get("title") or doc.get("scheme_name") or doc.get("act_name") or "Document"
             summary = doc.get("summary") or doc.get("overview") or doc.get("financial_benefit") or ""
-            provisions = doc.get("key_provisions") or doc.get("eligibility_criteria") or doc.get("permitted_activities") or []
+            provisions = _as_list(doc.get("key_provisions") or doc.get("eligibility_criteria") or doc.get("permitted_activities"))
             citations = doc.get("citations", [])
 
             formatted_context += f"\n--- Context Document {i}: {title} ---\n"
@@ -145,3 +164,68 @@ Your mandate:
             "are, introduce yourself by name; if they asked what you can do or asked for help, point them to the "
             "topics above."
         ).format(query=query, language=language)
+
+    @classmethod
+    def build_assistant_system(cls, language: str = "en", context_docs: List[Dict[str, Any]] = None,
+                               authorities: List[Dict[str, Any]] = None) -> str:
+        """
+        System prompt for the LLM-first conversational chatbot. The LLM understands
+        the query (language + intent), grounds its answer on the light-RAG reference
+        documents when they are relevant, and otherwise uses sound general knowledge
+        of Indian cooperative law & schemes. Always answers in the user's language,
+        plain and simple, and ends with one short follow-up question.
+        """
+        formatted_context = ""
+        for i, doc in enumerate((context_docs or [])[:4], 1):
+            title = doc.get("title") or doc.get("scheme_name") or doc.get("act_name") or "Document"
+            summary = doc.get("summary") or doc.get("overview") or doc.get("financial_benefit") or ""
+            provisions = _as_list(doc.get("key_provisions") or doc.get("eligibility_criteria") or doc.get("permitted_activities"))
+            citations = doc.get("citations", [])
+
+            formatted_context += f"\n[{i}] {title}\n"
+            if summary:
+                formatted_context += f"Summary: {summary}\n"
+            if provisions:
+                formatted_context += f"Details: {', '.join([str(p) for p in provisions[:4]])}\n"
+            if citations:
+                formatted_context += f"Official Citations: {', '.join(citations)}\n"
+
+        formatted_authorities = ""
+        if authorities:
+            for a in authorities:
+                line = cls._format_authority(a)
+                if line:
+                    formatted_authorities += f"- {line}\n"
+
+        system = (
+            "You are the friendly Multilingual Cooperative Assistant for Indian farmers, cooperative "
+            "societies (PACS), and rural citizens under the Ministry of Cooperation.\n\n"
+            "RULES:\n"
+            "1. Always write the ENTIRE reply in the user's language, using its native script (ISO 639-1 "
+            "code: "
+        )
+        system += language
+        system += (
+            "). Official scheme names like PM-KISAN, KCC, PACS, PMFBY may stay in English.\n"
+            "2. Write like you are talking to a farmer: plain words, short sentences, first give the most "
+            "important answer, then the supporting detail. Keep the whole reply to about 5-8 short sentences "
+            "unless the user asks for details.\n"
+            "3. Base your answer on the REFERENCE DOCUMENTS below whenever they answer the user's question. "
+            "If the references are not enough, you may use your general knowledge of Indian cooperative law "
+            "and government schemes, and mark those parts with \"(general guidance)\". Never invent an "
+            "official figure, phone number, name, or officer as fact.\n"
+            "4. If a CONCERNED AUTHORITY is listed below, include that officer's name/contact exactly as "
+            "given when relevant; if it says the district/block is needed, ask the user for their district "
+            "and block instead of naming anyone.\n"
+            "5. If you genuinely do not know, say so honestly and suggest the user contact their local PACS "
+            "Secretary or the Assistant Registrar of Cooperative Societies (ARCS), or visit the official "
+            "government portal.\n"
+            "6. At the END of your reply, ask ONE short follow-up question that continues the conversation "
+            "(e.g. offer the document list, the next step, or ask their district) — never more than one "
+            "question.\n\n"
+            "REFERENCE DOCUMENTS (use when relevant):\n"
+            + (formatted_context or "No documents retrieved for this query.\n")
+        )
+        if formatted_authorities:
+            system += "\nCONCERNED AUTHORITY (use exactly as given, do not alter or invent):\n" + formatted_authorities
+        return system

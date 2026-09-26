@@ -159,6 +159,14 @@ export default function App() {
     setInputText('');
   };
 
+  const buildHistory = (msgs) =>
+    (msgs || [])
+      .filter(
+        (m) => m && typeof m.text === 'string' && m.text.trim() && (m.sender === 'user' || m.sender === 'assistant')
+      )
+      .slice(-8)
+      .map((m) => ({ role: m.sender, content: m.text.trim() }));
+
   const handleSelectSession = (sessionId) => {
     const session = sessions.find((s) => s.id === sessionId);
     if (session) {
@@ -189,7 +197,7 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const res = await sendTextQuery(text, langCode);
+      const res = await sendTextQuery(text, langCode, buildHistory(messages));
       const assistantMsg = {
         id: Date.now() + 1,
         sender: 'assistant',
@@ -238,7 +246,7 @@ export default function App() {
       setIsLoading(true);
 
       try {
-        const res = await sendTextQuery(spokenText, langCode);
+        const res = await sendTextQuery(spokenText, langCode, buildHistory(messages));
         const assistantMsg = {
           id: Date.now() + 1,
           sender: 'assistant',

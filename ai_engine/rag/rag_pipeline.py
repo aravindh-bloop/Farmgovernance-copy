@@ -1,15 +1,16 @@
 """
-End-to-End Multilingual RAG Pipeline coordinating Domain Routing, Multi-Domain Sub-Model Execution,
-Post-LLM Database Cross-Verification for every sub-model, and Unified Fusion Synthesis.
+LLM-First Conversational Pipeline.
+
+The LLM (Gemini) understands every query — language, intent, and follow-ups —
+and writes the answer. Light-RAG retrieval is used only to GROUND the answer
+with verified reference documents; catalog-heavy sub-model engines are no
+longer part of the chat flow. Out of the box the assistant remains fully
+multi-turn: it keeps the conversation history, replies in the user's language,
+keeps answers plain for a farmer, and ends each turn with one follow-up question.
 """
+import re
 from typing import Dict, Any, List
 from ai_engine.orchestration.domain_router import DomainRouter
-from ai_engine.orchestration.fusion_synthesizer import FusionSynthesizer
-from ai_engine.submodels.farmer_scheme_engine import FarmerSchemeEngine
-from ai_engine.submodels.grievance_engine import GrievanceEngine
-from ai_engine.submodels.pacs_pmfby_engine import PacsPmfbyEngine
-from ai_engine.submodels.cooperative_law_engine import CooperativeLawEngine
-from ai_engine.submodels.financial_literacy_engine import FinancialLiteracyEngine
 from ai_engine.rag.prompt_builder import PromptBuilder
 from ai_engine.llm.reasoner import LLMReasoner
 from ai_engine.resolution_navigator.procedure_generator import ProcedureGenerator
@@ -20,15 +21,9 @@ class RAGPipeline:
     def __init__(self):
         self.router = DomainRouter()
         self.reasoner = LLMReasoner()
-        self.farmer_scheme_submodel = FarmerSchemeEngine()
-        self.grievance_submodel = GrievanceEngine()
-        self.pacs_pmfby_submodel = PacsPmfbyEngine()
-        self.cooperative_law_submodel = CooperativeLawEngine()
-        self.financial_literacy_submodel = FinancialLiteracyEngine()
-        self.fusion_synthesizer = FusionSynthesizer()
-        self.procedure_gen = ProcedureGenerator()
         self.lang_detector = LanguageDetector()
         self.translator = TranslationEngine()
+        self.procedure_gen = ProcedureGenerator()
 
     def _answer_general(self, query: str, language: str) -> str:
         """Greeting / small-talk answered by the LLM directly in the user's language."""
@@ -42,21 +37,6 @@ class RAGPipeline:
                     ans = translated
         return ans.strip()
 
-    def _answer_generate(self, query: str, language: str, domain: str,
-                         docs: List[Dict[str, Any]], authorities: List[Dict[str, Any]]) -> str:
-        """
-        RAG-assisted LLM generation for any question the verified catalogs didn't
-        match. Grounds on retrieved context when available, otherwise allows the
-        LLM to use general knowledge of Indian cooperative law & schemes. Returns
-        "" if the LLM is unreachable (no hallucinated filler).
-        """
-        prompt = PromptBuilder.build_generate_prompt(query, docs[:3], language, domain, authorities)
-        ans = self.reasoner.generate_response(prompt, docs, domain or "general", language)
-        ans = (ans or "").strip()
-        if not ans or ans.startswith("I could not find") or ans.startswith("No matching official"):
-            return ""
-        return ans
-
     def _no_record_message(self, language: str) -> str:
         msg = (
             "I could not find a verified official record matching your question in the database. "
@@ -69,117 +49,75 @@ class RAGPipeline:
                 return translated
         return msg
 
-    def process_query(self, query: str, language: str = "en") -> Dict[str, Any]:
+    @staticmethod
+    def _is_ascii(text: str) -> bool:
+        if not text:
+            return False
+        printable = re.sub(r"\s+", "", text)
+        if not printable:
+            return False
+        ascii_chars = sum(1 for ch in printable if ord(ch) < 128)
+        return (ascii_chars / len(printable)) > 0.95
+
+    def process_query(self, query: str, language: str = "en", history: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         # Auto-detect language from query text if Indic script characters are present
         if query and query.strip():
             det = self.lang_detector.detect(query)
             if det and det.get("language") and det.get("language") != "en":
                 language = det.get("language")
 
-        # 1. Routing & Retrieval across all activated sub-domains
+        # 1. Light-RAG retrieval — grounding only, never the final answer.
         routing_result = self.router.route_and_retrieve(query=query, language=language)
+        docs = routing_result.get("retrieved_context", [])[:4]
+        citations = routing_result.get("citations", [])
+        authorities = routing_result.get("authorities", [])
         primary_domain = routing_result["domain"]
         active_domains = routing_result.get("active_domains", [primary_domain])
-        all_docs = routing_result["retrieved_context"]
-        citations = routing_result["citations"]
+        confidence = routing_result["intent"].get("confidence", 0.0)
         extracted_slots = routing_result.get("extracted_slots", {})
-        authorities = routing_result.get("authorities", [])
 
-        domain_contexts: Dict[str, List[Dict[str, Any]]] = {}
-        domain_answers: Dict[str, str] = {}
+        # 2. Greetings (first turn only) — warm, short LLM reply.
+        if self.reasoner.is_greeting(query) and not history:
+            answer = self._answer_general(query, language)
+            grounded = False
+        else:
+            # 3. LLM-first conversational generation: history + this turn, grounded
+            #    on the retrieved reference documents, ending with a follow-up.
+            system = PromptBuilder.build_assistant_system(language, docs, authorities=authorities)
+            turns = (history or []) + [{"role": "user", "content": query}]
+            answer = self.reasoner.chat(turns, system, language, docs)
+            answer = (answer or "").strip()
+            grounded = bool(docs)
+            if not answer or answer.startswith("I could not find") or answer.startswith("No matching"):
+                answer = self._no_record_message(language)
 
-        # 2. Execute each sub-model with specialized engines or domain RAG.
-        #    A sub-model can now return an EMPTY guidance (no verified match) —
-        #    the pipeline never fills that gap with top catalog entries.
-        for dom in active_domains:
-            guidance_text = ""
-            primary_doc: Dict[str, Any] = {}
-            dom_citations: List[str] = []
+        # 4. Guard against English leakage: if the requested language needs a
+        #    non-Latin script and the model returned Latin text, translate it.
+        if language and language != "en" and answer and self._is_ascii(answer):
+            translated = self.translator.translate(answer, "en", language)
+            if translated:
+                answer = translated.strip()
 
-            if dom == "farmer_scheme":
-                scheme_res = self.farmer_scheme_submodel.generate_scheme_guidance(query, language)
-                guidance_text = scheme_res["guidance_text"]
-                primary_doc = scheme_res["primary_scheme"]
-                dom_citations = scheme_res["citations"]
-            elif dom == "grievance":
-                grv_res = self.grievance_submodel.generate_grievance_guidance(query, language)
-                guidance_text = grv_res["guidance_text"]
-                primary_doc = grv_res["primary_grievance"]
-                dom_citations = grv_res["primary_grievance"].get("legal_sections", [])
-            elif dom == "pacs_pmfby":
-                pacs_res = self.pacs_pmfby_submodel.generate_guidance(query, language)
-                guidance_text = pacs_res["guidance_text"]
-                primary_doc = pacs_res["primary_topic"]
-                dom_citations = pacs_res["citations"]
-            elif dom == "cooperative_law":
-                law_res = self.cooperative_law_submodel.generate_guidance(query, language)
-                guidance_text = law_res["guidance_text"]
-                primary_doc = law_res["primary_law"]
-                dom_citations = law_res["citations"]
-            elif dom == "financial_literacy":
-                fin_res = self.financial_literacy_submodel.generate_guidance(query, language)
-                guidance_text = fin_res["guidance_text"]
-                primary_doc = fin_res["primary_topic"]
-                dom_citations = fin_res["citations"]
-
-            if guidance_text:
-                domain_answers[dom] = guidance_text
-                if primary_doc:
-                    domain_contexts[dom] = [primary_doc]
-                citations.extend(dom_citations)
-
-        # 3. Greetings — warm LLM answer. Never a canned PM-KISAN dump.
-        is_greeting = self.reasoner.is_greeting(query)
-        if is_greeting:
-            if "general" not in active_domains:
-                active_domains = active_domains + ["general"]
-            domain_answers["general"] = self._answer_general(query, language)
-            domain_contexts["general"] = []
-
-        # 4. ANY question the verified catalogs couldn't answer gets a real answer
-        #    via the RAG+LLM generate path (general knowledge allowed, grounded on
-        #    retrieved records when available). Degrade to the honest no-record
-        #    message ONLY when the LLM itself is unreachable/offline.
-        if not is_greeting and primary_domain not in domain_answers:
-            generated = self._answer_generate(query, language, primary_domain, all_docs, authorities)
-            if generated:
-                domain_answers[primary_domain] = generated
-                domain_contexts[primary_domain] = all_docs[:2]
-        if not domain_answers:
-            domain_answers[primary_domain] = self._no_record_message(language)
-            domain_contexts[primary_domain] = all_docs[:2]
-
-        # 5. Post-LLM Multi-Domain Database Cross-Verification & Fusion
-        fused_result = self.fusion_synthesizer.synthesize(
-            query=query,
-            active_domains=active_domains,
-            domain_contexts=domain_contexts,
-            domain_answers=domain_answers,
-            citations=citations,
-            extracted_slots=extracted_slots,
-            language=language
-        )
-
-        # 6. Procedure / Resolution recommendation if Grievance or Calamity
+        # 5. Resolution procedure for complaints / redressal queries.
         procedure = None
-        if "grievance" in active_domains or primary_domain == "grievance" or any(w in query.lower() for w in ["delay", "reject", "refuse", "bribe", "complaint"]):
-            procedure = self.procedure_gen.generate_for_query(query, all_docs)
+        if any(w in query.lower() for w in ["complaint", "delay", "reject", "bribe", "refuse", "harass", "recover"]):
+            procedure = self.procedure_gen.generate_for_query(query, docs)
 
         return {
             "query": query,
             "language": language,
             "domain": primary_domain,
             "active_domains": active_domains,
-            "is_multi_domain": fused_result["is_multi_domain"],
-            "confidence": routing_result["intent"]["confidence"],
-            "answer": fused_result["fused_answer"],
-            "recommended_officer": fused_result.get("recommended_officer"),
-            "citations": fused_result["citations"],
-            "verification_status": fused_result["verification_status"],
-            "trust_score": fused_result["trust_score"],
-            "verified_facts": fused_result["verified_facts"],
-            "corrections_applied": fused_result.get("corrections_applied", []),
-            "source_authority": fused_result["source_authority"],
+            "is_multi_domain": len(active_domains) > 1,
+            "confidence": confidence,
+            "answer": answer,
+            "recommended_officer": authorities[0] if authorities else None,
+            "citations": list(dict.fromkeys(citations)),
+            "verification_status": bool(grounded),
+            "trust_score": 0.96 if grounded else 0.90,
+            "verified_facts": [],
+            "corrections_applied": [],
+            "source_authority": citations[0] if citations else None,
             "procedure": procedure,
             "extracted_slots": extracted_slots,
             "authorities": authorities

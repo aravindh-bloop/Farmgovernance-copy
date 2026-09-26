@@ -24,7 +24,8 @@ async def handle_chat_query(payload: ChatRequest):
     try:
         response = chat_service.process_chat(
             query=payload.query,
-            language=payload.language or "en"
+            language=payload.language or "en",
+            history=payload.history
         )
         return response
     except Exception as e:

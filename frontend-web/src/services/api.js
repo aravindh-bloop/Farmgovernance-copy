@@ -19,13 +19,13 @@ const USE_MOCK = false;
  * @param {string} language - ISO language code (e.g. 'en', 'hi', 'ta', 'kn', 'te', 'mr', 'gu', 'bn')
  * @returns {Promise<{ responseType: string, answer: string, officerRecommendation?: object }>}
  */
-export async function sendTextQuery(text, language = 'en') {
+export async function sendTextQuery(text, language = 'en', history = []) {
   if (!USE_MOCK) {
     try {
       const res = await fetch(`${API_BASE_URL}/chat/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text, language }),
+        body: JSON.stringify({ query: text, language, history }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();

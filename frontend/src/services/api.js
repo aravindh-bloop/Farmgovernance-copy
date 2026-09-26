@@ -5,12 +5,12 @@ const API_BASE_URL = _apiRoot.includes('/api/') ? _apiRoot : `${_apiRoot}/api/v1
  * Send a text query to the unified assistant.
  * @returns {Promise<{ responseType: string, answer: string, officerRecommendation?: object, citations?: array, verificationStatus?: boolean, trustScore?: number, activeDomains?: array, verifiedFacts?: array }>}
  */
-export async function sendTextQuery(text, language = 'en') {
+export async function sendTextQuery(text, language = 'en', history = []) {
   try {
     const res = await fetch(`${API_BASE_URL}/chat/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: text, language }),
+      body: JSON.stringify({ query: text, language, history }),
     });
     if (res.ok) {
       const data = await res.json();

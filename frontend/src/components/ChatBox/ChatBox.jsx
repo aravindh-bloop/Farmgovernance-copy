@@ -29,8 +29,54 @@ export default function ChatBox({ initialQuery = '' }) {
   const [isLoading, setIsLoading] = useState(false);
   const [audioState, setAudioState] = useState({ messageId: null, status: 'idle' });
   const currentAudioRef = useRef(null);
+  const audioUnlockedRef = useRef(false);
   const messagesEndRef = useRef(null);
   const sliderRef = useRef(null);
+
+  // Unlock browser autoplay on first interaction so assistant answers can
+  // auto-speak on the touch kiosk (Chromium blocks play() until a user gesture).
+  useEffect(() => {
+    const unlock = () => {
+      if (audioUnlockedRef.current) return;
+      audioUnlockedRef.current = true;
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) {
+          const ctx = new Ctx();
+          ctx.resume();
+          const src = ctx.createBufferSource();
+          src.buffer = ctx.createBuffer(1, 1, 22050);
+          src.connect(ctx.destination);
+          src.start(0);
+        }
+      } catch (e) {
+        /* audio unlock unsupported — per-message speaker button still works */
+      }
+    };
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('touchstart', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+  }, []);
+
+  const buildHistory = (msgs) =>
+    (msgs || [])
+      .filter(
+        (m) =>
+          m && typeof m.text === 'string' && m.text.trim() &&
+          (m.sender === 'user' || m.sender === 'assistant' || m.sender === 'ai')
+      )
+      .slice(-8)
+      .map((m) => ({
+        role: m.sender === 'user' ? 'user' : 'assistant',
+        content: m.text
+          .replace(/^🎙️\s*/, '')
+          .replace(/^"|"$/g, '')
+          .trim(),
+      }))
+      .filter((m) => m.content);
 
   const scrollSlider = (direction) => {
     if (sliderRef.current) {
@@ -288,7 +334,7 @@ export default function ChatBox({ initialQuery = '' }) {
     setIsLoading(true);
 
     try {
-      const response = await sendTextQuery(trimmed, language);
+      const response = await sendTextQuery(trimmed, language, buildHistory(messages));
       addAssistantMessage(response);
     } catch {
       setMessages((prev) => [
@@ -328,7 +374,7 @@ export default function ChatBox({ initialQuery = '' }) {
           },
         ]);
 
-        const response = await sendTextQuery(spokenText, language);
+        const response = await sendTextQuery(spokenText, language, buildHistory(messages));
         addAssistantMessage(response);
       } else if (audioBlob) {
         // Fallback for audio blob without browser transcript
