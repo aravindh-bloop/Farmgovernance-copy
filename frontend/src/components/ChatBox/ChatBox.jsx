@@ -22,7 +22,7 @@ const SLIDING_LANGUAGES = [
   { code: 'or', name: 'Odia', native: 'ଓଡ଼ିଆ' },
 ];
 
-export default function ChatBox({ initialQuery = '' }) {
+export default function ChatBox({ initialQuery = '', onConversationState }) {
   const { language, setLanguage, t } = useLanguage();
   const [messages, setMessages] = useState([]);
   const [inputQuery, setInputQuery] = useState('');
@@ -92,6 +92,18 @@ export default function ChatBox({ initialQuery = '' }) {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  // Report conversation progress upward so optional after-conversation actions
+  // (the E-Report) only appear once the citizen has actually finished talking.
+  useEffect(() => {
+    if (!onConversationState) return;
+    onConversationState({
+      isLoading,
+      turns: messages
+        .filter((m) => m && typeof m.text === 'string' && m.text.trim())
+        .map((m) => ({ role: m.sender === 'user' ? 'user' : 'assistant', text: m.text })),
+    });
+  }, [messages, isLoading, onConversationState]);
 
   // Clean up audio on unmount
   useEffect(() => {

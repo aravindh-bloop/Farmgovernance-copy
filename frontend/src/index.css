@@ -944,6 +944,28 @@ body {
   .workspace-header { min-height: 54px; }
 }
 
+/* Voice-first kiosk: one palette shared by language, welcome and chat screens. */
+:root {
+  --k-bg: #e9eafe;
+  --k-surface: linear-gradient(135deg, #f4f4ff 0%, #e8e9fb 52%, #dfe3fa 100%);
+  --k-surface-flat: #f4f4ff;
+  --k-ink: #30334f;
+  --k-ink-strong: #292b45;
+  --k-ink-soft: #40435e;
+  --k-ink-muted: #777b9b;
+  --k-purple: #7652e8;
+  --k-purple-deep: #7545df;
+  --k-purple-soft: #9b80e8;
+  --k-purple-wash: rgba(213, 220, 250, 0.7);
+  --k-line: rgba(151, 153, 196, 0.35);
+  --k-line-soft: rgba(151, 153, 196, 0.2);
+  --k-card: rgba(255, 255, 255, 0.62);
+  --k-card-strong: rgba(255, 255, 255, 0.88);
+  --k-shadow: 0 24px 60px rgba(82, 84, 145, 0.16);
+  --k-mic-gradient: radial-gradient(circle at 62% 34%, #fff5a8 0 8%, #f48fd4 27%, #a348f3 54%, #6842df 79%);
+  --k-orb-size: clamp(120px, 26vmin, 210px);
+}
+
 /* Voice-first kiosk welcome screen */
 .kiosk-portal {
   min-height: 100vh;
@@ -997,30 +1019,27 @@ body {
 .kiosk-live-status i { width: 6px; height: 6px; border-radius: 50%; background: #69c5a3; box-shadow: 0 0 9px rgba(105, 197, 163, .7); }
 .kiosk-language-pill { display: inline-flex; align-items: center; gap: 5px; padding: 8px 11px; border: 1px solid rgba(126, 128, 177, .25); border-radius: 999px; background: rgba(255,255,255,.5); color: #555976; font: inherit; font-size: 10px; cursor: pointer; }
 
-.kiosk-welcome-content { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 8px 24px 36px; text-align: center; }
+/* Greeting pinned to the top, microphone centred in the space that remains. */
+.kiosk-welcome-content { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; padding: clamp(10px, 2.4vh, 26px) 24px clamp(14px, 3vh, 34px); text-align: center; }
+.kiosk-greeting { display: flex; flex-direction: column; align-items: center; }
+.kiosk-mic-stage { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; width: 100%; min-height: 0; }
 .kiosk-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 15px; color: #7660d9; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
 .kiosk-welcome-content h1 { color: #292b45; font-size: clamp(34px, 5vw, 62px); font-weight: 300; line-height: 1; letter-spacing: -.04em; text-shadow: 0 4px 30px rgba(101, 91, 186, .12); }
 .kiosk-welcome-content h2 { margin-top: 11px; font-size: clamp(22px, 3.3vw, 36px); font-weight: 300; letter-spacing: -.025em; }
 .kiosk-welcome-content h2 { color: #40435e; }
 .kiosk-welcome-content h2 strong { font-weight: 700; color: #30334f; }
 .kiosk-instruction { margin-top: 17px; color: #777b9b; font-size: 12px; line-height: 1.65; }
-.kiosk-orb-button { position: relative; display: grid; place-items: center; width: 104px; height: 104px; margin-top: 26px; border: 0; border-radius: 50%; background: transparent; color: #fff; cursor: pointer; }
-.kiosk-orb { position: relative; z-index: 2; display: grid; place-items: center; width: 61px; height: 61px; border: 1px solid rgba(169, 123, 255, .86); border-radius: 50%; background: radial-gradient(circle at 62% 34%, #fff5a8 0 8%, #f48fd4 27%, #a348f3 54%, #6842df 79%); color: #fff; box-shadow: 0 0 16px #b16dff, 0 0 38px rgba(143, 81, 244, .58), inset 0 0 13px rgba(255,255,255,.8); transition: transform .2s ease; }
-.kiosk-orb-button:hover .kiosk-orb { transform: scale(1.08); }
+.kiosk-orb-button { position: relative; display: grid; place-items: center; width: var(--k-orb-size); height: var(--k-orb-size); border: 0; border-radius: 50%; background: transparent; color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.kiosk-orb { position: relative; z-index: 2; display: grid; place-items: center; width: 66%; height: 66%; border: 1px solid rgba(169, 123, 255, .86); border-radius: 50%; background: var(--k-mic-gradient); box-shadow: 0 0 22px #b16dff, 0 0 60px rgba(143, 81, 244, .58), inset 0 0 18px rgba(255,255,255,.8); transition: transform .2s ease; }
+.kiosk-orb-mic { display: block; width: 34%; height: 34%; background: #fff; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,.18); }
+.kiosk-orb-button:hover .kiosk-orb, .kiosk-orb-button:focus-visible .kiosk-orb { transform: scale(1.07); }
+.kiosk-orb-button:active .kiosk-orb { transform: scale(.97); }
 .orb-halo { position: absolute; border: 1px solid rgba(152, 110, 240, .32); border-radius: 50%; animation: kioskPulse 2.6s ease-out infinite; }
 .halo-one { inset: 8px; }
 .halo-two { inset: -5px; animation-delay: .8s; opacity: .54; }
 @keyframes kioskPulse { 0%, 100% { transform: scale(.87); opacity: .2; } 45% { transform: scale(1.05); opacity: .8; } }
-.kiosk-orb-caption { margin-top: 2px; color: #777b9b; font-size: 10px; }
+.kiosk-orb-caption { margin-top: clamp(6px, 1.4vh, 16px); color: var(--k-ink-muted); font-size: clamp(10px, 1.5vh, 13px); font-weight: 600; letter-spacing: .04em; }
 
-.kiosk-prompt-bar { display: flex; align-items: center; gap: 9px; width: min(520px, 100%); margin-top: 22px; padding: 10px 12px; border: 1px solid rgba(142, 143, 184, .7); border-radius: 12px; background: rgba(255, 255, 255, .84); box-shadow: 0 7px 22px rgba(89, 86, 150, .12), inset 0 1px 0 rgba(255,255,255,.92); }
-.kiosk-prompt-bar > svg { flex: 0 0 auto; color: #7770c7; }
-.kiosk-prompt-bar input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #30334f; font: inherit; font-size: 11px; }
-.kiosk-prompt-bar input::placeholder { color: #777b9b; }
-.kiosk-prompt-bar .voice-btn { width: 26px; height: 26px; min-height: 26px; padding: 0; border: 0; background: transparent; color: #7770c7; box-shadow: none; }
-.kiosk-prompt-bar .voice-btn svg { width: 15px; height: 15px; }
-.kiosk-prompt-bar .recording-indicator { display: none; }
-.kiosk-prompt-send { display: grid; place-items: center; width: 27px; height: 27px; border: 0; border-radius: 50%; background: #7545df; color: #fff; cursor: pointer; box-shadow: 0 3px 8px rgba(117, 69, 223, .25); }
 
 .kiosk-services { padding: 18px 32px 22px; border-top: 1px solid rgba(151, 154, 200, .2); background: rgba(213, 220, 250, .7); }
 .kiosk-services-heading { display: flex; align-items: baseline; justify-content: space-between; max-width: 840px; margin: 0 auto 12px; }
@@ -1210,4 +1229,245 @@ body {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* ---------- Voice-first kiosk: user identity, chat overlay, E-Report ---------- */
+
+.kiosk-user-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 11px;
+  border: 1px solid var(--k-line);
+  border-radius: 999px;
+  background: var(--k-card);
+  color: var(--k-ink-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.kiosk-user-tag-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--k-purple);
+  box-shadow: 0 0 8px rgba(118, 82, 232, .7);
+}
+
+/* The conversation opens over the welcome page instead of navigating away. */
+.kiosk-stage.is-conversing .kiosk-welcome-content,
+.kiosk-stage.is-conversing .kiosk-services,
+.kiosk-stage.is-conversing .kiosk-footer-strip { visibility: hidden; }
+
+.kiosk-chat-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #f4f4ff 0%, #e8e9fb 52%, #dfe3fa 100%);
+  animation: kioskFade .22s ease;
+}
+.kiosk-chat-overlay-topbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(10px, 1.8vh, 20px) clamp(14px, 3vw, 32px);
+  border-bottom: 1px solid var(--k-line-soft);
+}
+.kiosk-chat-overlay-actions { display: flex; align-items: center; gap: 8px; }
+.kiosk-overlay-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 13px;
+  border: 1px solid var(--k-line);
+  border-radius: 999px;
+  background: var(--k-card);
+  color: var(--k-ink-soft);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s ease, border-color .18s ease;
+}
+.kiosk-overlay-btn:hover { background: var(--k-card-strong); border-color: var(--k-purple-soft); }
+.kiosk-chat-overlay-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  justify-content: center;
+  padding: clamp(8px, 1.6vh, 18px) clamp(8px, 3vw, 28px) clamp(10px, 2vh, 24px);
+}
+.kiosk-chat-overlay-body .chat-container {
+  width: min(940px, 100%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid var(--k-line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .74);
+  box-shadow: 0 12px 30px rgba(89, 86, 150, .11);
+}
+.kiosk-chat-overlay-body .chat-messages { flex: 1; min-height: 0; overflow-y: auto; background: rgba(243, 244, 255, .55); }
+.kiosk-chat-overlay-body .chat-header { background: rgba(255, 255, 255, .52); border-color: var(--k-line-soft); }
+.kiosk-chat-overlay-body .chat-input-bar { background: rgba(255, 255, 255, .86); border-color: var(--k-line-soft); }
+
+@keyframes kioskFade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Optional paperwork, kept in the corner. */
+.ereport-dock {
+  position: absolute;
+  right: clamp(10px, 2vw, 22px);
+  bottom: clamp(10px, 2vh, 22px);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  animation: kioskFade .3s ease;
+}
+.ereport-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border: 1px solid var(--k-line);
+  border-radius: 999px;
+  background: var(--k-card-strong);
+  color: var(--k-purple);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(89, 86, 150, .16);
+}
+.ereport-chip:hover { border-color: var(--k-purple-soft); }
+.ereport-card {
+  width: min(320px, calc(100vw - 32px));
+  padding: 14px;
+  border: 1px solid var(--k-line);
+  border-radius: 16px;
+  background: var(--k-card-strong);
+  box-shadow: 0 18px 44px rgba(82, 84, 145, .22);
+}
+.ereport-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: var(--k-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+.ereport-head span { display: inline-flex; align-items: center; gap: 6px; }
+.ereport-head button { display: grid; place-items: center; padding: 4px; border: 0; border-radius: 6px; background: transparent; color: var(--k-ink-muted); cursor: pointer; }
+.ereport-head button:hover { background: rgba(118, 82, 232, .1); }
+.ereport-hint { margin-bottom: 10px; color: var(--k-ink-muted); font-size: 11px; line-height: 1.5; }
+.ereport-phone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border: 1px solid var(--k-line);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--k-purple);
+}
+.ereport-phone input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: var(--k-ink); font: inherit; font-size: 13px; }
+.ereport-error { margin-top: 6px; color: #b91c1c; font-size: 10px; font-weight: 600; }
+.ereport-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 11px;
+  border: 0;
+  border-radius: 11px;
+  background: linear-gradient(135deg, #8a60e9, #6742d4);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ereport-submit:disabled { opacity: .7; cursor: wait; }
+.ereport-optional { margin-top: 8px; color: var(--k-ink-muted); font-size: 9px; text-align: center; }
+.ereport-done { display: flex; flex-direction: column; align-items: center; gap: 8px; color: #047857; text-align: center; }
+.ereport-done p { color: var(--k-ink); font-size: 12px; line-height: 1.5; }
+.ereport-done-note { color: var(--k-ink-muted); font-size: 10px; line-height: 1.5; }
+.ereport-preview { width: 100%; text-align: left; }
+.ereport-preview summary { color: var(--k-purple); font-size: 11px; font-weight: 600; cursor: pointer; }
+.ereport-preview pre {
+  max-height: 190px;
+  margin-top: 8px;
+  padding: 10px;
+  overflow: auto;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .9);
+  color: var(--k-ink-soft);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- Responsiveness: phone portrait through tall portrait kiosk ---------- */
+
+/* Short-and-wide (landscape kiosk / desktop) stays compact. */
+@media (max-height: 620px) and (orientation: landscape) {
+  .kiosk-eyebrow { margin-bottom: 6px; }
+  .kiosk-welcome-content h1 { font-size: clamp(26px, 4.4vh, 40px); }
+  .kiosk-welcome-content h2 { font-size: clamp(17px, 3vh, 26px); }
+  .kiosk-instruction { margin-top: 9px; font-size: 11px; }
+  :root { --k-orb-size: clamp(96px, 30vh, 150px); }
+  .kiosk-services { padding: 10px 32px 12px; }
+  .kiosk-service-card { padding: 7px 6px; }
+  .service-icon { width: 34px; height: 34px; }
+  .service-icon svg { width: 17px; height: 17px; }
+  .kiosk-footer-strip { padding: 8px 32px; }
+}
+
+/* Portrait and narrow: stack the greeting, grow the mic, wrap the topic dock. */
+@media (orientation: portrait), (max-width: 760px) {
+  :root { --k-orb-size: clamp(136px, 32vmin, 230px); }
+  .kiosk-welcome-content h1 { font-size: clamp(32px, 11vmin, 58px); }
+  .kiosk-welcome-content h2 { font-size: clamp(19px, 6.4vmin, 32px); }
+  .kiosk-instruction { font-size: clamp(11px, 3.2vmin, 14px); }
+  .kiosk-eyebrow { font-size: clamp(8px, 2.2vmin, 10px); letter-spacing: .12em; }
+  .kiosk-service-dock { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 8px; }
+  .kiosk-service-card { font-size: 10px; }
+  .kiosk-topbar { flex-wrap: wrap; gap: 10px; padding: 16px 18px; }
+  .kiosk-status-row { flex-wrap: wrap; gap: 8px; }
+  .kiosk-live-status { display: none; }
+  .kiosk-chat-overlay-actions .kiosk-overlay-btn span { display: none; }
+  .kiosk-chat-overlay-actions .kiosk-overlay-btn { padding: 9px; }
+}
+
+/* Very tall portrait kiosks: give the mic the extra room. */
+@media (orientation: portrait) and (min-aspect-ratio: 1/2) {
+  .kiosk-welcome-content { padding-top: clamp(18px, 5vh, 54px); }
+  .kiosk-welcome-content h1 { font-size: clamp(40px, 13vmin, 76px); }
+  .kiosk-welcome-content h2 { font-size: clamp(22px, 7.4vmin, 40px); }
+  :root { --k-orb-size: clamp(170px, 40vmin, 300px); }
+  .kiosk-service-card { padding: 13px 8px; font-size: 11px; }
+  .service-icon { width: 46px; height: 46px; }
+}
+
+/* Narrow phones. */
+@media (max-width: 520px) {
+  .kiosk-brand-lockup span { display: none; }
+  .kiosk-user-tag { font-size: 9px; padding: 7px 9px; }
+  .kiosk-service-dock { grid-template-columns: repeat(auto-fit, minmax(74px, 1fr)); gap: 6px; }
+  .kiosk-service-card { font-size: 9px; padding: 9px 4px; }
+  .service-icon { width: 36px; height: 36px; }
+  .service-icon svg { width: 18px; height: 18px; }
+  .ereport-dock { right: 10px; bottom: 10px; left: 10px; align-items: stretch; }
+  .ereport-chip { justify-content: center; }
+  .kiosk-chat-overlay-body { padding: 6px 6px 74px; }
 }
