@@ -19,6 +19,7 @@ try:
         OFFLINE_MODE: bool = True
         DEFAULT_LLM_PROVIDER: str = "gemini"
         GROQ_API_KEY: Optional[str] = None
+        GROQ_MODEL: str = "qwen/qwen3.8-27b"
         GEMINI_API_KEY: Optional[str] = None
         SARVAM_API_KEY: Optional[str] = None
         OPENAI_API_KEY: Optional[str] = None
@@ -50,6 +51,7 @@ except ImportError:
         OFFLINE_MODE = True
         DEFAULT_LLM_PROVIDER = "gemini"
         GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+        GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
         GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
         SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
         OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

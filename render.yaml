@@ -25,7 +25,9 @@ services:
       - key: GEMINI_API_KEY
         sync: false            # set in Render dashboard → Environment
       - key: GROQ_API_KEY
-        sync: false
+        sync: false            # free key from console.groq.com — used automatically when Gemini is throttled
+      - key: GROQ_MODEL
+        value: qwen/qwen3.8-27b   # best free model for Tamil/Telugu/Marathi/Hindi output
       - key: SARVAM_API_KEY
         sync: false
       - key: BHASHINI_USER_ID

@@ -27,6 +27,9 @@ class LLMReasoner:
     def __init__(self):
         self.provider = settings.DEFAULT_LLM_PROVIDER
         self.groq_key = settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY")
+        # Qwen 3.8-27B: fastest on Groq and the strongest of the free models on
+        # Indian languages (Tamil/Telugu/Marathi), which the kiosk depends on.
+        self.groq_model = getattr(settings, "GROQ_MODEL", None) or os.getenv("GROQ_MODEL") or "qwen/qwen3.8-27b"
         self.gemini_key = settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
         self._cache: "OrderedDict[str, tuple]" = OrderedDict()
         self._cache_lock = threading.Lock()
@@ -222,26 +225,58 @@ class LLMReasoner:
             "generationConfig": {"temperature": 0.3, "maxOutputTokens": 2048},
         })
 
-    def _try_groq(self, prompt: str, language: str) -> str:
-        try:
-            import httpx
+    _GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-            resp = httpx.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.groq_key}"},
-                json={
-                    "model": "openai/gpt-oss-120b",
-                    "messages": [{"role": "user", "content": self._apply_language_instruction(prompt, language)}],
-                    "temperature": 0.2,
-                },
-                timeout=20.0,
-            )
-            if resp.status_code == 200:
-                content = resp.json()["choices"][0]["message"]["content"]
-                return content.strip()
-        except Exception as exc:
-            print(f"Groq API call failed (falling back): {exc}")
+    def _post_groq(self, messages: List[Dict[str, str]], temperature: float = 0.3, attempts: int = 3) -> str:
+        """Groq chat completion with caching. Primary failover when Gemini is throttled."""
+        import time
+
+        import httpx
+
+        cache_key = "groq:" + self._cache_key({"model": self.groq_model, "messages": messages})
+        cached = self._cache_get(cache_key)
+        if cached:
+            return cached
+
+        for attempt in range(attempts):
+            try:
+                resp = httpx.post(
+                    self._GROQ_URL,
+                    headers={
+                        "Authorization": f"Bearer {self.groq_key}",
+                        "User-Agent": "cooperative-assistant/1.0",
+                    },
+                    json={
+                        "model": self.groq_model,
+                        "messages": messages,
+                        "temperature": temperature,
+                        "max_tokens": 1200,
+                    },
+                    timeout=45.0,
+                )
+                if resp.status_code == 200:
+                    message = resp.json()["choices"][0]["message"]
+                    # gpt-oss models put the answer in `reasoning` when `content` is empty.
+                    answer = (message.get("content") or "").strip() or (message.get("reasoning") or "").strip()
+                    self._cache_put(cache_key, answer)
+                    return answer
+                if resp.status_code in (429, 500, 502, 503, 504):
+                    # Groq free tier throttles bursts; a couple of seconds is enough.
+                    time.sleep(1.5 * (attempt + 1))
+                    continue
+                print(f"Groq returned HTTP {resp.status_code}")
+                return ""
+            except Exception as exc:
+                print(f"Groq API call failed (falling back): {exc}")
+                return ""
+        print("Groq rate limit reached after retries (falling back).")
         return ""
+
+    def _try_groq(self, prompt: str, language: str) -> str:
+        return self._post_groq(
+            [{"role": "user", "content": self._apply_language_instruction(prompt, language)}],
+            temperature=0.2,
+        )
 
     @staticmethod
     def _normalize_turns(messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -279,29 +314,10 @@ class LLMReasoner:
         })
 
     def _try_groq_chat(self, messages: List[Dict[str, Any]], system_prompt: str, language: str) -> str:
-        try:
-            import httpx
-
-            payload = [{"role": "system", "content": system_prompt}]
-            for turn in self._normalize_turns(messages):
-                payload.append({"role": turn["role"], "content": turn["content"]})
-            cache_key = "groq:" + self._cache_key({"messages": payload})
-            cached = self._cache_get(cache_key)
-            if cached:
-                return cached
-            resp = httpx.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.groq_key}"},
-                json={"model": "openai/gpt-oss-120b", "messages": payload, "temperature": 0.3},
-                timeout=30.0,
-            )
-            if resp.status_code == 200:
-                answer = resp.json()["choices"][0]["message"]["content"].strip()
-                self._cache_put(cache_key, answer)
-                return answer
-        except Exception as exc:
-            print(f"Groq chat call failed (falling back): {exc}")
-        return ""
+        payload = [{"role": "system", "content": system_prompt}]
+        for turn in self._normalize_turns(messages):
+            payload.append({"role": turn["role"], "content": turn["content"]})
+        return self._post_groq(payload)
 
     @staticmethod
     def _as_list(value: Any) -> List[str]:

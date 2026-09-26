@@ -88,7 +88,9 @@ class RAGPipeline:
             answer = self.reasoner.chat(turns, system, language, docs)
             answer = (answer or "").strip()
             grounded = bool(docs)
-            if not answer or answer.startswith("I could not find") or answer.startswith("No matching"):
+            # An honest "I could not find a record" from the LLM is a real answer —
+            # only fall back when every provider returned nothing at all.
+            if not answer:
                 answer = self._no_record_message(language)
 
         # 4. Guard against English leakage: if the requested language needs a
