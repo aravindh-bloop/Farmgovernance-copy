@@ -50,14 +50,12 @@ export async function sendVoiceQuery(audioBlob, language = 'en', transcript = ''
   return mockVoiceResponse(language);
 }
 
-/**
- * Fetch Text-to-Speech audio from the backend TTS engine.
- * @param {string} text - The text to synthesize
 const _kioskAudioCache = new Map();
 
 /**
  * Fetch Text-to-Speech audio from the backend TTS engine.
- * Features client-side in-memory caching and 15s timeout to allow neural TTS to complete.
+ * Features client-side in-memory caching and a generous timeout, because a
+ * Render free-tier cold start can take far longer than the request itself.
  * @param {string} text - The text to synthesize
  * @param {string} language - The language code (e.g. 'hi', 'ta', 'en', 'ml', 'te')
  * @returns {Promise<string|null>} Object URL pointing to the audio stream, or null
@@ -70,7 +68,9 @@ export async function fetchTTSAudio(text, language = 'en') {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  // Generous: on Render's free tier a cold start can take 30-50s, and cutting
+  // the request off early would silently drop the voice reply.
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
 
   try {
     const res = await fetch(`${API_BASE_URL}/chat/tts`, {

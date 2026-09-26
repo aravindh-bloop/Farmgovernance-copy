@@ -55,6 +55,39 @@ export default function ChatInterface({
   const recognitionRef = useRef(null);
   const langSliderRef = useRef(null);
 
+  // Unlock browser autoplay on the first interaction. Chromium blocks
+  // audio.play() (and speechSynthesis) until the document has seen a user
+  // gesture, which silently swallowed the assistant's spoken replies.
+  const audioUnlockedRef = useRef(false);
+  useEffect(() => {
+    const unlock = () => {
+      if (audioUnlockedRef.current) return;
+      audioUnlockedRef.current = true;
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) {
+          const ctx = new Ctx();
+          ctx.resume();
+          const src = ctx.createBufferSource();
+          src.buffer = ctx.createBuffer(1, 1, 22050);
+          src.connect(ctx.destination);
+          src.start(0);
+        }
+        if (window.speechSynthesis) {
+          window.speechSynthesis.resume();
+        }
+      } catch (e) {
+        /* autoplay unsupported — the per-message button still works */
+      }
+    };
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('touchstart', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('touchstart', unlock);
+    };
+  }, []);
+
   // Auto-scroll to bottom of chat history on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

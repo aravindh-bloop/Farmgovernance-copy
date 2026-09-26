@@ -430,6 +430,13 @@ body {
   cursor: wait;
 }
 
+/* Every audio path failed — make that obvious instead of looking idle. */
+.chat-audio-btn.error {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #b91c1c;
+}
+
 .audio-wave-anim {
   display: inline-flex;
   align-items: center;

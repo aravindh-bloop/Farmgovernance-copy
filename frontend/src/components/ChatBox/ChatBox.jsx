@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Volume2, Pause, Play, Loader2, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Send, Bot, User, Volume2, VolumeX, Pause, Play, Loader2, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
 import { sendTextQuery, sendVoiceQuery, fetchTTSAudio } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import VoiceInput from '../VoiceInput/VoiceInput';
@@ -48,6 +48,10 @@ export default function ChatBox({ initialQuery = '' }) {
           src.buffer = ctx.createBuffer(1, 1, 22050);
           src.connect(ctx.destination);
           src.start(0);
+        }
+        if (window.speechSynthesis) {
+          // The Web Speech fallback is blocked by the same autoplay policy.
+          window.speechSynthesis.resume();
         }
       } catch (e) {
         /* audio unlock unsupported — per-message speaker button still works */
@@ -192,6 +196,16 @@ export default function ChatBox({ initialQuery = '' }) {
     fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
   };
 
+  /**
+   * Called only when every audio path has failed. Leaving the button in the
+   * neutral state made a total TTS failure look identical to "working", which
+   * is very hard to diagnose on a kiosk, so say so on the button itself.
+   */
+  const markVoiceUnavailable = (messageId, reason) => {
+    console.error('Voice output unavailable:', reason);
+    setAudioState({ messageId, status: 'error' });
+  };
+
   const getVoiceForLanguage = (code) => {
     if (!window.speechSynthesis) return null;
     const voices = window.speechSynthesis.getVoices();
@@ -228,7 +242,7 @@ export default function ChatBox({ initialQuery = '' }) {
 
   const fallbackSpeechSynthesis = (messageId, text, langCode) => {
     if (!('speechSynthesis' in window)) {
-      setAudioState({ messageId: null, status: 'idle' });
+      markVoiceUnavailable(messageId, 'browser has no speechSynthesis');
       return;
     }
     window.speechSynthesis.cancel();
@@ -257,8 +271,9 @@ export default function ChatBox({ initialQuery = '' }) {
       utterance.lang = chosenVoice.lang;
     } else {
       if (targetLang !== 'en') {
-        // Skip British fallback if no native Indic voice installed
-        setAudioState({ messageId: null, status: 'idle' });
+        // No native voice for this language: stay silent rather than reading an
+        // Indian answer in a British voice, but tell the user why.
+        markVoiceUnavailable(messageId, `no ${targetLang} system voice installed`);
         return;
       }
       utterance.lang = targetLocale;
@@ -269,7 +284,11 @@ export default function ChatBox({ initialQuery = '' }) {
 
     utterance.onstart = () => setAudioState({ messageId, status: 'playing' });
     utterance.onend = () => setAudioState({ messageId: null, status: 'idle' });
-    utterance.onerror = () => setAudioState({ messageId: null, status: 'idle' });
+    utterance.onerror = (e) => {
+      // 'not-allowed' means autoplay was blocked; anything else means the
+      // system voice itself failed. Either way the user needs to see it.
+      markVoiceUnavailable(messageId, `speechSynthesis error: ${e?.error || 'unknown'}`);
+    };
 
     window.speechSynthesis.speak(utterance);
   };
@@ -529,6 +548,7 @@ export default function ChatBox({ initialQuery = '' }) {
           const isPlaying = isCurrentAudio && audioState.status === 'playing';
           const isPaused = isCurrentAudio && audioState.status === 'paused';
           const isAudioLoading = isCurrentAudio && audioState.status === 'loading';
+          const isAudioError = isCurrentAudio && audioState.status === 'error';
 
           return (
             <div key={msg.id} className={`chat-row ${isUser ? 'chat-row-user' : 'chat-row-ai'}`}>
@@ -584,10 +604,15 @@ export default function ChatBox({ initialQuery = '' }) {
                       <button
                         type="button"
                         onClick={() => toggleSpeech(msg.id, msg.text)}
-                        className={`chat-audio-btn ${isPlaying ? 'playing' : ''} ${isAudioLoading ? 'loading' : ''}`}
-                        title={isPlaying ? 'Pause Voice' : isPaused ? 'Resume Voice' : 'Listen with Voice'}
+                        className={`chat-audio-btn ${isPlaying ? 'playing' : ''} ${isAudioLoading ? 'loading' : ''} ${isAudioError ? 'error' : ''}`}
+                        title={isPlaying ? 'Pause Voice' : isPaused ? 'Resume Voice' : isAudioError ? 'Voice failed - tap to retry' : 'Listen with Voice'}
                       >
-                        {isAudioLoading ? (
+                        {isAudioError ? (
+                          <>
+                            <VolumeX size={14} />
+                            <span>Voice unavailable - tap to retry</span>
+                          </>
+                        ) : isAudioLoading ? (
                           <>
                             <Loader2 size={14} className="animate-spin" />
                             <span>Loading Voice...</span>
