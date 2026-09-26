@@ -48,8 +48,10 @@ function AppContent() {
     // Initial timer start
     resetIdleTimer();
 
-    // Event listeners for user activity
-    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    // Event listeners for user activity. 'coop:activity' is raised by the chat
+    // when a voice turn starts or finishes, so a spoken conversation is never
+    // mistaken for an unattended kiosk.
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'coop:activity'];
     const handleUserActivity = () => resetIdleTimer();
 
     events.forEach(event => document.addEventListener(event, handleUserActivity));
@@ -91,17 +93,22 @@ function AppContent() {
     setScreen(SCREENS.LANGUAGE);
   };
 
+  // The kiosk portal has its own fixed light palette, so the theme switch does
+  // nothing there and used to sit on top of the user tag and language pill.
+  const onKioskPortal = screen === SCREENS.WELCOME;
+
   return (
     <div className="app-root" style={{ position: 'relative' }}>
       {isIdle && <IdleScreen onWakeUp={handleWakeUp} />}
-      
-      {/* 🌙 Floating Corner Dark Mode Switch from the very start of the website */}
+
+      {/* 🌙 Floating Corner Dark Mode Switch, hidden on the kiosk portal where the
+          palette is fixed and it would cover the kiosk status controls. */}
       <div className="theme-toggle" style={{
         position: 'fixed',
         top: '1rem',
         right: '1rem',
         zIndex: 9999,
-        display: isIdle ? 'none' : 'block'
+        display: isIdle || onKioskPortal ? 'none' : 'block'
       }}>
         <button
           onClick={toggleTheme}

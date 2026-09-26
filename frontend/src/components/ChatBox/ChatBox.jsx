@@ -93,6 +93,14 @@ export default function ChatBox({ initialQuery = '', onConversationState }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  // A voice kiosk has nobody touching the screen while it is being spoken to, so
+  // the app-level idle timer would slam the idle screen over a live conversation.
+  // Every new turn counts as activity, including the assistant's spoken reply.
+  useEffect(() => {
+    if (!messages.length) return;
+    document.dispatchEvent(new Event('coop:activity'));
+  }, [messages.length, isLoading]);
+
   // Report conversation progress upward so optional after-conversation actions
   // (the E-Report) only appear once the citizen has actually finished talking.
   useEffect(() => {
