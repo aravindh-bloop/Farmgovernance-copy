@@ -57,7 +57,7 @@ const _kioskAudioCache = new Map();
 
 /**
  * Fetch Text-to-Speech audio from the backend TTS engine.
- * Features client-side in-memory caching and 3.5s timeout for fast response.
+ * Features client-side in-memory caching and 15s timeout to allow neural TTS to complete.
  * @param {string} text - The text to synthesize
  * @param {string} language - The language code (e.g. 'hi', 'ta', 'en', 'ml', 'te')
  * @returns {Promise<string|null>} Object URL pointing to the audio stream, or null
@@ -70,7 +70,7 @@ export async function fetchTTSAudio(text, language = 'en') {
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3500);
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
     const res = await fetch(`${API_BASE_URL}/chat/tts`, {

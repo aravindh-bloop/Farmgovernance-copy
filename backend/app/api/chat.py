@@ -11,6 +11,7 @@ from backend.app.services.chat_service import chat_service
 from ai_engine.language.speech_to_text import speech_to_text
 from ai_engine.language.text_to_speech import text_to_speech, clean_speech_text
 from ai_engine.language.interfaces import AudioInput
+from ai_engine.language.language_detector import LanguageDetector
 
 router = APIRouter()
 
@@ -33,24 +34,16 @@ async def handle_chat_query(payload: ChatRequest):
 async def handle_tts(payload: TTSRequest):
     try:
         clean_text = clean_speech_text(payload.text, max_chars=220)
-        target_lang = payload.language or "en"
-        # Auto-detect Indic script to guarantee pure native Indic pronunciation
-        if any('\u0B80' <= c <= '\u0BFF' for c in clean_text):
-            target_lang = "ta"
-        elif any('\u0900' <= c <= '\u097F' for c in clean_text):
-            target_lang = "hi"
-        elif any('\u0C00' <= c <= '\u0C7F' for c in clean_text):
-            target_lang = "te"
-        elif any('\u0C80' <= c <= '\u0CFF' for c in clean_text):
-            target_lang = "kn"
-        elif any('\u0D00' <= c <= '\u0D7F' for c in clean_text):
-            target_lang = "ml"
-        elif any('\u0980' <= c <= '\u09FF' for c in clean_text):
-            target_lang = "bn"
-        elif any('\u0A80' <= c <= '\u0AFF' for c in clean_text):
-            target_lang = "gu"
-        elif any('\u0A00' <= c <= '\u0A7F' for c in clean_text):
-            target_lang = "pa"
+        target_lang = (payload.language or "en").strip()
+
+        # Trust the language chosen by the frontend (this is what keeps Marathi
+        # "mr", Odia "or", etc. speaking with the right voice). If the client
+        # left it at the English default but the text is clearly Indic, guess
+        # the script family as a fallback.
+        if target_lang == "en":
+            guessed = LanguageDetector().detect(clean_text).get("language")
+            if guessed and guessed != "en":
+                target_lang = guessed
 
         tts_res = text_to_speech(clean_text, target_lang, play_audio=False)
         if not tts_res.ok or not tts_res.audio_bytes:

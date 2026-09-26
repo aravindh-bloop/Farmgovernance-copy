@@ -84,7 +84,11 @@ export default function ChatBox({ initialQuery = '' }) {
     stopCurrentAudio();
     if (!text) return;
 
-    const detectedLang = detectScriptLanguage(text) || langCode || language;
+    // Prefer the user's chosen language for neural TTS; only sniff the script
+    // when the choice is English (e.g. auto-detected answers). This stops
+    // Devanagari answers (hi/mr) always being read as Hindi.
+    const effectiveLang =
+      langCode && langCode !== 'en' ? langCode : detectScriptLanguage(text) || language || 'en';
     setAudioState({ messageId, status: 'loading' });
 
     try {

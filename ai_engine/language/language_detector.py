@@ -17,6 +17,15 @@ class LanguageDetector:
         "or": (0x0B00, 0x0B7F), # Odia
     }
 
+    # Words that appear far more often in Marathi than Hindi. When a Devanagari
+    # query contains any of these, we treat it as Marathi ("mr").
+    MARATHI_MARKERS = [
+        "आहे", "आहेत", "नाही", "मध्ये", "पाणी", "शेती", "पीक", "पंतप्रधान",
+        "विमा", "मराठी", "शेतकरी", "करू", "कुठे", "कसे", "काय", "अर्ज",
+        "महसुल", "जिल्हा", "तालुका", "सरपंच", "झाले", "द्या", "सवलत",
+        "पुरवठा", "शेतमाल", "बियाणे", "खत", "बँक", "कर्ज",
+    ]
+
     def detect(self, text: str) -> Dict[str, Any]:
         if not text or not text.strip():
             return {"language": "en", "confidence": 1.0}
@@ -34,6 +43,9 @@ class LanguageDetector:
 
         if total_indic > 0:
             detected_lang = max(counts, key=counts.get)
-            return {"language": detected_lang, "confidence": counts[detected_lang] / total_indic}
+            # Disambiguate Devanagari: Marathi vs Hindi
+            if detected_lang == "hi" and any(marker in text for marker in self.MARATHI_MARKERS):
+                detected_lang = "mr"
+            return {"language": detected_lang, "confidence": counts.get(detected_lang, total_indic) / total_indic, "script": "indic"}
 
-        return {"language": "en", "confidence": 0.95}
+        return {"language": "en", "confidence": 0.95, "script": "latin"}

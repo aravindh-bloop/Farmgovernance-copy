@@ -118,11 +118,25 @@ class FarmerSchemeEngine:
             scored_schemes.sort(key=lambda x: x[0], reverse=True)
             return [item[1] for item in scored_schemes]
 
-        # Fallback to top schemes if no score
-        return self.schemes_catalog[:3]
+        # No matching scheme — return empty so the caller can handle gracefully
+        # instead of dumping the top catalog entries (the PM-KISAN-everything bug).
+        return []
 
     def generate_scheme_guidance(self, query: str, language: str = "en") -> Dict[str, Any]:
         matched = self.find_matching_schemes(query)
+        if not matched:
+            return {
+                "matched_schemes": [],
+                "primary_scheme": {},
+                "guidance_text": "",
+                "financial_benefit": None,
+                "official_portal": None,
+                "documents_required": [],
+                "citations": [],
+                "is_verified": True,
+                "trust_score": 0.0
+            }
+
         primary = matched[0]
 
         guidance_text = self._format_scheme_response(primary, query, language)

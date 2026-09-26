@@ -76,10 +76,20 @@ class CooperativeLawEngine:
             scored.sort(key=lambda x: x[0], reverse=True)
             return [s[1] for s in scored]
 
-        return self.laws_catalog[:2]
+        return []
 
     def generate_guidance(self, query: str, language: str = "en") -> Dict[str, Any]:
         matched = self.find_matching_laws(query)
+        if not matched:
+            return {
+                "matched_laws": [],
+                "primary_law": {},
+                "guidance_text": "",
+                "citations": [],
+                "is_verified": True,
+                "trust_score": 0.0
+            }
+
         primary = matched[0]
 
         guidance_text = self._format_response(primary, language)

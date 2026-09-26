@@ -170,6 +170,14 @@ SUPPORTED_LANGUAGES: Dict[str, Dict[str, Any]] = {
         "piper_voice": None,
         "gtts_tld": "com",
     },
+    "or": {
+        "name": "Odia",
+        "native_name": "ଓଡ଼ିଆ",
+        "whisper_code": "or",
+        "bhashini_code": "or",
+        "piper_voice": None,
+        "gtts_tld": "com",
+    },
 }
 
 

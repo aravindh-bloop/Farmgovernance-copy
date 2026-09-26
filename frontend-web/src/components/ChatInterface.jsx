@@ -292,7 +292,11 @@ export default function ChatInterface({
     setAudioState({ messageId, status: 'loading' });
 
     const cleanText = text.replace(/[#*`📌⚠️🏛️🌾⚖️💳🛡️💊🚜📲🏗️💻🧮📊🔒•]/g, '').trim();
-    const effectiveLang = detectScriptLanguage(cleanText);
+    // Prefer the user's chosen language for neural TTS; only sniff the script
+    // when the choice is English. This stops Devanagari answers (hi/mr) always
+    // being read as Hindi.
+    const effectiveLang =
+      langCode && langCode !== 'en' ? langCode : detectScriptLanguage(cleanText);
 
     try {
       // Fetch Pure Native Voice from Backend (/api/v1/chat/tts)

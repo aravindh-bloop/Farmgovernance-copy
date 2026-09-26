@@ -22,6 +22,10 @@ try:
         GEMINI_API_KEY: Optional[str] = None
         SARVAM_API_KEY: Optional[str] = None
         OPENAI_API_KEY: Optional[str] = None
+        BHASHINI_API_KEY: Optional[str] = None
+        BHASHINI_USER_ID: Optional[str] = None
+        BHASHINI_INFERENCE_API_KEY: Optional[str] = None
+        BHASHINI_PIPELINE_ID: Optional[str] = None
         EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
 
         BASE_DIR: str = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -49,6 +53,10 @@ except ImportError:
         GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
         SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
         OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+        BHASHINI_API_KEY = os.getenv("BHASHINI_API_KEY")
+        BHASHINI_USER_ID = os.getenv("BHASHINI_USER_ID")
+        BHASHINI_INFERENCE_API_KEY = os.getenv("BHASHINI_INFERENCE_API_KEY")
+        BHASHINI_PIPELINE_ID = os.getenv("BHASHINI_PIPELINE_ID")
         EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

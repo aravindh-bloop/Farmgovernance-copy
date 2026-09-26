@@ -34,7 +34,8 @@ class FusionSynthesizer:
             "farmer_scheme": "📜 Farmer Welfare & Subsidy Schemes",
             "grievance": "⚖️ Grievance Redressal & Statutory Escalation",
             "cooperative_law": "🏛️ Cooperative Law & Governance (MSCS Act)",
-            "financial_literacy": "💳 Credit Literacy & Kisan Credit Card (KCC)"
+            "financial_literacy": "💳 Credit Literacy & Kisan Credit Card (KCC)",
+            "general": "💬 General Assistance"
         }
 
         domain_titles_ta = {
@@ -42,7 +43,8 @@ class FusionSynthesizer:
             "farmer_scheme": "📜 உழவர் நலன் & அரசு மானியத் திட்டங்கள்",
             "grievance": "⚖️ குறைதீர்ப்பு & சட்டப்பூர்வ தீர்வு",
             "cooperative_law": "🏛️ கூட்டுறவு சட்டம் & நிர்வாக வழிகாட்டுதல்",
-            "financial_literacy": "💳 கிசான் கிரெடிட் கார்டு (KCC) & கடன் வழிகாட்டல்"
+            "financial_literacy": "💳 கிசான் கிரெடிட் கார்டு (KCC) & கடன் வழிகாட்டல்",
+            "general": "💬 பொது உதவி"
         }
 
         domain_titles_hi = {
@@ -50,7 +52,8 @@ class FusionSynthesizer:
             "farmer_scheme": "📜 किसान कल्याण एवं सरकारी योजनाएं",
             "grievance": "⚖️ शिकायत निवारण एवं कानूनी समाधान",
             "cooperative_law": "🏛️ सहकारी कानून एवं प्रशासन",
-            "financial_literacy": "💳 किसान क्रेडिट कार्ड (KCC) एवं वित्तीय साक्षरता"
+            "financial_literacy": "💳 किसान क्रेडिट कार्ड (KCC) एवं वित्तीय साक्षरता",
+            "general": "💬 सामान्य सहायता"
         }
 
         domain_titles = domain_titles_ta if language == "ta" else (domain_titles_hi if language == "hi" else domain_titles_en)
@@ -94,9 +97,30 @@ class FusionSynthesizer:
 
         fused_answer = "\n".join(fused_sections).strip()
 
+        # If nothing verified matched, use an honest fallback rather than an empty reply.
+        if not fused_answer:
+            fused_answer = (
+                "I could not find a verified official record matching your question in the database. "
+                "Please rephrase your question or contact your local Assistant Registrar of Cooperative "
+                "Societies (ARCS) or PACS Secretary with your full details."
+            )
+            if language and language != "en":
+                translated = self.translator.translate(fused_answer, "en", language)
+                if translated:
+                    fused_answer = translated
+
+        # Tamil & Hindi have native sub-model templates, but some topics fall back to
+        # English. Translate those via the neural pipeline (Bhashini→Sarvam→Google).
+        if language in ("ta", "hi") and fused_answer:
+            ascii_ratio = (sum(1 for ch in fused_answer if ord(ch) < 128) / max(len(fused_answer), 1)) if fused_answer else 1.0
+            if ascii_ratio > 0.95:
+                translated = self.translator.translate(fused_answer, "en", language)
+                if translated:
+                    fused_answer = translated
+
         # Apply phrase translation if language is not English, Tamil, or Hindi (which already have native sub-model templates)
-        if language not in ("en", "ta", "hi"):
-            fused_answer = self.translator.translate(fused_answer, "en", language)
+        if language not in ("en", "ta", "hi") and fused_answer:
+            fused_answer = self.translator.translate(fused_answer, "en", language) or fused_answer
 
         # 3. Recommend Verified District Officer (Strict Zero-Hallucination)
         officer_rec = self.officer_recommender.recommend_officer(

@@ -28,6 +28,10 @@ services:
         sync: false
       - key: SARVAM_API_KEY
         sync: false
+      - key: BHASHINI_USER_ID
+        sync: false            # Bhashini Govt. NMT pipeline — set in Render dashboard → Environment
+      - key: BHASHINI_INFERENCE_API_KEY
+        sync: false
 
   # ---------- Kiosk Frontend (static) ----------
   - type: web

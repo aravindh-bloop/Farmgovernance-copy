@@ -110,6 +110,8 @@ class TranslationEngine:
         """
         Translates markdown content into the target Indian language while preserving markdown formatting,
         emojis, statutory citations, URLs, and numbers.
+
+        Provider priority: Bhashini (Govt. pipeline) → Sarvam Mayura → Google gtx.
         """
         if not text or source_lang == target_lang or target_lang == "en":
             return text
@@ -120,7 +122,31 @@ class TranslationEngine:
             for en_term, target_term in self.glossary[target_lang].items():
                 processed = processed.replace(en_term, target_term)
 
-        # 2. Translate line-by-line or paragraph-by-paragraph to preserve Markdown layout
+        # 2. Whole-text neural MT (Bhashini first, then Sarvam) — fastest and most fluent
+        cache_key = f"{target_lang}:{processed.strip()}"
+        if cache_key in self._cache:
+            return self._cache[cache_key]
+
+        from .bhashini_adapter import bhashini_translate, is_configured as bhashini_configured
+        if bhashini_configured() or _sarvam_key_present():
+            if bhashini_configured():
+                try:
+                    whole = bhashini_translate(processed, source_lang, target_lang)
+                    if whole and whole.strip():
+                        self._cache[cache_key] = whole.strip()
+                        return whole.strip()
+                except Exception as exc:
+                    print(f"Bhashini whole-text translate failed: {exc}")
+            try:
+                from .sarvam_adapter import sarvam_translate
+                whole = sarvam_translate(processed, source_lang, target_lang)
+                if whole and whole.strip():
+                    self._cache[cache_key] = whole.strip()
+                    return whole.strip()
+            except Exception as exc:
+                print(f"Sarvam whole-text translate failed: {exc}")
+
+        # 3. Line-by-line fallback (Google gtx)
         lines = processed.split("\n")
         translated_lines: List[str] = []
 
@@ -137,7 +163,7 @@ class TranslationEngine:
 
             # Check if line already has Indic characters (Tamil, Devanagari, Telugu, Kannada, etc.)
             has_indic = any('\u0900' <= char <= '\u0DFF' or '\u0B80' <= char <= '\u0BFF' for char in line)
-            
+
             # If line is primarily in English, translate the text content
             if not has_indic or len(re.findall(r'[a-zA-Z]{4,}', line)) >= 3:
                 # Handle bullet points
@@ -161,11 +187,11 @@ class TranslationEngine:
                 if bold_match:
                     header_part = bold_match.group(1)
                     body_part = bold_match.group(2)
-                    
+
                     # Translate header and body
                     tr_header = self._translate_segment(header_part.replace("**", "").replace(":", ""), target_lang)
                     tr_body = self._translate_segment(body_part, target_lang) if body_part.strip() else ""
-                    
+
                     translated_lines.append(f"{prefix}**{tr_header}:** {tr_body}".strip())
                 else:
                     tr_content = self._translate_segment(content, target_lang)
@@ -173,4 +199,15 @@ class TranslationEngine:
             else:
                 translated_lines.append(line)
 
-        return "\n".join(translated_lines)
+        out = "\n".join(translated_lines)
+        if out.strip():
+            self._cache[cache_key] = out.strip()
+        return out
+
+
+def _sarvam_key_present() -> bool:
+    try:
+        from config.settings import settings as _s
+        return bool(_s.SARVAM_API_KEY)
+    except Exception:
+        return False

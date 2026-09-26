@@ -74,3 +74,16 @@ Your mandate:
         prompt += f"USER QUERY (Language requested: {language}):\n{query}\n\n"
         prompt += "Provide a complete, structured response with Key Points, Recommended Action, and Official Citations. Every fact must be traceable to the CONTEXT above — do not include any date, month, number, or name absent from it."
         return prompt
+
+    @classmethod
+    def build_greeting_prompt(cls, query: str, language: str = "en") -> str:
+        return (
+            "You are the Multilingual Cooperative Assistant for Indian farmers, cooperative societies and rural "
+            "citizens. The user's message (language requested: {language}) is:\n\n{query}\n\n"
+            "This is a greeting or a general assistive message. Respond warmly and briefly (2-4 sentences). "
+            "Describe what you can help with: Cooperative Laws (MSCS Act), Government Subsidy Schemes, PMFBY crop "
+            "insurance, Kisan Credit Card credit, PACS services and grievance redressal. Do NOT invent specific "
+            "scheme amounts, numbers or dates. If the user thanked you, acknowledge politely; if they asked who you "
+            "are, introduce yourself by name; if they asked what you can do or asked for help, point them to the "
+            "topics above."
+        ).format(query=query, language=language)

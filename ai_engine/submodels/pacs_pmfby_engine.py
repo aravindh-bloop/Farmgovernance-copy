@@ -58,7 +58,7 @@ class PacsPmfbyEngine:
             "AADHAAR_UPDATE_NAME_ADDRESS_CSC": ["change my name", "change name", "change address", "update address", "aadhar card", "aadhaar card", "aadhaar name", "aadhaar address", "aadhaar update", "whom i need to meet", "where i can go", "aadhar", "aadhaar", "correction in aadhar", "aadhar correction", "आधार कार्ड", "नाम बदलना", "पता बदलना", "आधार सुधार", "ஆதார் கார்டு", "ஆதார் பெயர் மாற்றம்", "முகவரி மாற்றம்", "ஆதார் திருத்தம்", "ஆதார் அட்டை", "ఆధార్ కార్డు", "పేరు మార్పు", "చిరునామా మార్పు"],
             "PMFBY_72H_LOCALIZED_CALAMITY": ["72 hours", "72 hour", "72h", "hailstorm", "flood", "inundation", "landslide", "cloudburst", "post-harvest", "cut and spread", "calamity", "heavy rain", "heavy rains", "heavy rainfall", "rain", "rains", "rainfall", "crop loss", "crops lost", "crop damage", "crops damaged", "crops destroyed", "crop destroyed", "crops got desteroyed", "desteroyed", "destroy", "ruined crop", "ruined crops", "flood damage", "rain damage", "excess rain", "72 घंटे", "ओलावृष्टि", "बाढ़", "जलभराव", "72 மணி நேரம்", "ஆலங்கட்டி மழை", "வெள்ளம்", "மழை", "பயிர் சேதம்", "பயிர் அழிந்தது", "72 గంటలు", "వడగళ్ళు", "వరదలు", "వర్షం", "72 तास", "गारपीट", "पाऊस"],
             "PMFBY_72H_CALAMITY_INTIMATION": ["72 hours", "72 hour", "72h", "hailstorm", "flood", "inundation", "landslide", "cloudburst", "post-harvest", "cut and spread", "calamity", "heavy rain", "heavy rains", "heavy rainfall", "rain", "rains", "rainfall", "crop loss", "crops lost", "crop damage", "crops damaged", "crops destroyed", "crop destroyed", "crops got desteroyed", "desteroyed", "destroy", "ruined crop", "ruined crops", "flood damage", "rain damage", "excess rain", "72 घंटे", "ओलावृष्टि", "बाढ़", "जलभराव", "72 மணி நேரம்", "ஆலங்கட்டி மழை", "வெள்ளம்", "மழை", "பயிர் சேதம்", "பயிர் அழிந்தது", "72 గంటలు", "వడగళ్ళు", "వరదలు", "వర్షం", "72 तास", "गारपीट", "पाऊस"],
-            "PMFBY_PREMIUM_RATES": ["premium percentage", "kharif, rabi and commercial", "kharif premium", "rabi premium", "2%", "1.5%", "5%", "sum insured", "non-loanee", "loanee", "प्रीमियम", "खरीफ", "रबी", "காப்பீட்டு கட்டணம்", "பயிர் காப்பீட்டு பிரீமியம்", "பிரிமீயம்", "ప్రీమియం", "पिक विमा हप्ता"],
+            "PMFBY_PREMIUM_RATES": ["premium percentage", "kharif, rabi and commercial", "kharif premium", "rabi premium", "2%", "1.5%", "5%", "sum insured", "non-loanee", "loanee", "प्रीमियम", "खरीफ", "रबी", "कாப்பீட்டு கட்டணம்", "பயிர் காப்பீட்டு பிரீமியம்", "பிரிமீயம்", "ప్రీమియం", "पिक विमा हप्ता", "विमा", "फसल विमा", "पीक विमा", "crop insurance example", "विमा म्हणजे"],
             "PMFBY_CORE_PREMIUM_RATES": ["premium percentage", "kharif, rabi and commercial", "kharif premium", "rabi premium", "2%", "1.5%", "5%", "sum insured", "non-loanee", "loanee"],
             "PMFBY_BANK_DEFAULT_CLAUSE": ["failed to upload", "ncip portal", "cut-off date", "who pays my loss", "pacs deducted pmfby", "clause 17.2", "bank default", "pacs did not pay premium", "premium not uploaded", "data not found", "बैंक की गलती", "प्रीमियम जमा नहीं किया", "வங்கி பொறுப்பு", "బ్యాంక్ డిఫాల్ట్"],
             "PMFBY_YIELD_CALCULATION_TECH": ["cce", "crop cutting", "yield calculation", "threshold yield", "yes-tech", "winds", "फसल कटाई प्रयोग", "விளைச்சல் மதிப்பீடு", "దిగుబడి నష్టం"],
@@ -104,10 +104,20 @@ class PacsPmfbyEngine:
             scored.sort(key=lambda x: x[0], reverse=True)
             return [s[1] for s in scored]
 
-        return all_items[:2]
+        return []
 
     def generate_guidance(self, query: str, language: str = "en") -> Dict[str, Any]:
         matched = self.find_matching_topics(query)
+        if not matched:
+            return {
+                "matched_topics": [],
+                "primary_topic": {},
+                "guidance_text": "",
+                "citations": [],
+                "is_verified": True,
+                "trust_score": 0.0
+            }
+
         primary = matched[0]
 
         guidance_text = self._format_response(primary, language)

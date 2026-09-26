@@ -76,10 +76,25 @@ class GrievanceEngine:
             scored.sort(key=lambda x: x[0], reverse=True)
             return [s[1] for s in scored]
 
-        return self.grievances_catalog[:2]
+        return []
 
     def generate_grievance_guidance(self, query: str, language: str = "en") -> Dict[str, Any]:
         matched = self.find_matching_grievance(query)
+        if not matched:
+            return {
+                "matched_grievances": [],
+                "primary_grievance": {},
+                "guidance_text": "",
+                "statutory_remedy": None,
+                "override_authority": None,
+                "legal_sections": [],
+                "sla_days": None,
+                "required_evidence": [],
+                "penalty_on_violator": None,
+                "is_verified": True,
+                "trust_score": 0.0
+            }
+
         primary = matched[0]
 
         guidance_text = self._format_grievance_response(primary, language)

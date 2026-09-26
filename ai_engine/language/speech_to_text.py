@@ -63,9 +63,10 @@ class WhisperSTTBackend(STTBackend):
         except ImportError:
             return False
 
-    def transcribe(self, audio: Union[AudioInput, str, Path, bytes]) -> STTResult:
+    def transcribe(self, audio: Union[AudioInput, str, Path, bytes], language: Optional[str] = None) -> STTResult:
         """
-        Transcribe audio and auto-detect the spoken language.
+        Transcribe audio, optionally hinting at the spoken ``language``
+        (ISO-639-1) to improve recognition accuracy.
         """
         # Normalise input if raw type passed directly to backend
         if isinstance(audio, str):
@@ -88,7 +89,7 @@ class WhisperSTTBackend(STTBackend):
             )
 
         try:
-            return self._do_transcribe(audio)
+            return self._do_transcribe(audio, language)
         except Exception as exc:
             logger.exception("STT transcription failed")
             return STTResult(
@@ -126,7 +127,7 @@ class WhisperSTTBackend(STTBackend):
         )
         logger.info("Whisper model loaded.")
 
-    def _do_transcribe(self, audio: AudioInput) -> STTResult:
+    def _do_transcribe(self, audio: AudioInput, language: Optional[str] = None) -> STTResult:
         self._ensure_model()
 
         audio_path: Optional[Path] = None
@@ -158,6 +159,7 @@ class WhisperSTTBackend(STTBackend):
                 str(audio_path),
                 beam_size=self._beam_size,
                 vad_filter=True,  # skip silence
+                language=(language or None),  # hint = better accuracy for kiosk languages
             )
 
             # Materialise segments
@@ -204,6 +206,7 @@ def _get_default_backend() -> WhisperSTTBackend:
 def speech_to_text(
     audio_input,
     backend: Optional[STTBackend] = None,
+    language: Optional[str] = None,
 ) -> STTResult:
     """
     High-level convenience function — the main entry point for teammates.
@@ -216,8 +219,10 @@ def speech_to_text(
         - ``"mic"`` → record from the default microphone.
         - An ``AudioInput`` instance → use directly.
     backend : STTBackend, optional
-        Custom backend (e.g. ``BhashiniSTTBackend``). Defaults to
-        the built-in Whisper backend.
+        Custom backend (e.g. ``SarvamSTTBackend``). Defaults to
+        the built-in Whisper backend (or Sarvam when its key is set).
+    language : str, optional
+        ISO-639-1 hint (e.g. ``"ta"``) used by backends that support it.
 
     Returns
     -------
@@ -296,6 +301,6 @@ def speech_to_text(
             is_empty=True,
         )
 
-    return engine.transcribe(audio)
+    return engine.transcribe(audio, language=language)
 
 

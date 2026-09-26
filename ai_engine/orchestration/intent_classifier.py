@@ -33,7 +33,7 @@ class IntentClassifier:
                 "फसल बीमा", "ओलावृष्टि", "बाढ़", "सूखा", "72 घंटे", "फसल नुकसान", "बीमा क्लेम", "अतिवृष्टि", "फसल क्षति", "जलभराव", "कीट प्रकोप", "दावा", "बारिश", "भारी बारिश",
                 "பயிர் காப்பீடு", "பயிர் சேதம்", "ஆலங்கட்டி மழை", "வெள்ளம்", "72 மணி நேரம்", "பயிர் இழப்பு", "வறட்சி", "காப்பீட்டு கோரிக்கை", "மழை", "கனமழை", "பயிர் அழிந்தது",
                 "పంట భీమా", "పంట నష్టం", "వడగళ్ళు", "వరదలు", "72 గంటలు", "పంట బీమా క్లెయిమ్", "కరువు", "నష్టపరిహారం", "వర్షం", "భారీ వర్షాలు",
-                "पिक विमा", "गारपीट", "अतिवृष्टी", "पिकांचे नुकसान", "विमा दावा", "72 तास", "दुष्काळ", "कीड", "पाऊस", "मुसळधार पाऊस",
+                "पिक विमा", "गारपीट", "अतिवृष्टी", "पिकांचे नुकसान", "विमा दावा", "72 तास", "दुष्काळ", "कीड", "पाऊस", "मुसळधार पाऊस", "फसल विमा", "पीक विमा",
                 "ಬೆಳೆ ವಿಮೆ", "ಬೆಳೆ ಹಾನಿ", "ಆಲಿಕಲ್ಲು ಮಳೆ", "ನೆರೆ", "72 ಗಂಟೆ", "ವಿಮೆ ಕ್ಲೈಮ್", "ಮಳೆ",
                 "ফসল বিমা", "শস্য বীমা", "বন্যা", "শিলাবৃষ্টি", "খরা", "৭২ ঘণ্টা", "ক্ষতিপূরণ", "বৃষ্টি",
                 "પાક વીમો", "કમોસમી વરસાદ", "કરા", "પૂર", "૭૨ કલાક", "પાક નુકસಾನ", "વરસાદ",
@@ -145,6 +145,14 @@ class IntentClassifier:
                 "கிசான் கிரெடிட் கார்டு", "பயிர் கடன்", "வட்டி மானியம்", "4 சதவீத வட்டி", "வங்கி பாதுகாப்பு", "உரிமை ஆவணம்",
                 "కిసాన్ క్రెడిట్ కార్డ్", "పంట రుణం", "వడ్డీ రాయితీ", "4 శాతం వడ్డీ", "రుణ పరిమితి",
                 "किसान क्रेडिट कार्ड", "कर्ज", "व्याज दर", "व्याज सवलत", "पत मर्यादा"
+            ],
+            "general": [
+                # Greetings, identity and general assistance (no scheme / legal intent)
+                "hello", "hi ", "hey", "namaste", "namaskar", "vanakkam", "good morning", "good evening",
+                "good afternoon", "thanks", "thank you", "who are you", "what are you", "what can you do",
+                "how can you help", "help me", "help", "start", "guide me", "what is this", "about this",
+                "नमस्ते", "नमस्कार", "धन्यवाद", "வணக்கம்", "நன்றி", "நீங்கள் யார்", "ధన్యవాదాలు",
+                "ನಮಸ್ಕಾರ", "धन्यवाद", "hej", "ssup",
             ]
         }
 
@@ -185,6 +193,11 @@ class IntentClassifier:
         if any(w in cleaned_query for w in ["pm-kisan", "pmkisan", "kusum", "solar pump", "aif", "subsidy", "सब्सिडी", "पीएम किसान"]):
             raw_scores["farmer_scheme"] += 4
 
+        # Greeting / small-talk booster
+        if any(w in cleaned_query for w in ["hello", "hi", "hey", "namaste", "thanks", "thank you", "who are you",
+                                             "what can you do", "help", "नमस्ते", "வணக்கம்", "नमस्कार"]):
+            raw_scores["general"] += 5
+
         # 3. Determine active domains and multi-domain fusion activation
         sorted_domains = sorted(raw_scores.items(), key=lambda x: x[1], reverse=True)
         top_domain, top_score = sorted_domains[0]
@@ -196,7 +209,9 @@ class IntentClassifier:
                 active_domains.append(dom)
 
         if not active_domains:
-            active_domains = [top_domain if top_score > 0 else "farmer_scheme"]
+            # No scheme/law/insurance signal at all — treat as a general chat inquiry.
+            # NEVER default to farmer_scheme (that was the PM-KISAN-everything bug).
+            active_domains = ["general"]
 
         confidence = min(round((top_score / 14.0), 2), 0.99) if top_score > 0 else 0.50
 

@@ -1,72 +1,104 @@
 """
-Bhashini (MeitY ULCA) adapter — stub showing how the national-language API
-would plug in behind the same STTBackend / TTSBackend interfaces.
+Bhashini (Government of India) Neural MT + speech adapter.
 
-This is **not** a working client — it demonstrates the correct request shapes,
-auth headers, and response mapping so a teammate can wire in real credentials
-later.
+Two parts:
+1. ``bhashini_translate`` — **working** NMT client for the Bhashini
+   ``sarvam_translate`` pipeline (https://api.bhashini.gov.in). Used as the
+   primary translation provider for the multilingual answers.
+2. ``BhashiniSTTBackend`` / ``BhashiniTTSBackend`` — interface-compatible
+   backends preserved for future ASR/TTS wiring. The active speech chain uses
+   Sarvam (STT/TTS) and Whisper/gTTS fallbacks, so these never run unless
+   explicitly selected.
 
-References
-----------
-- Portal: https://bhashini.gov.in
-- API docs (Postman): https://www.postman.com/bhashini/workspace/bhashini-api
-- GitBook: https://bhashini.gitbook.io/bhashini-apis/
+Credentials (from https://bhashini.gov.in):
+  - BHASHINI_USER_ID            (pipeline / user key)
+  - BHASHINI_INFERENCE_API_KEY  (inference API key)
 """
 
-import base64  # noqa: F401 — used in the documented TODO pattern below
-import json
-import logging
-import os
+import re
 
-from .interfaces import (
-    AudioInput,
-    AudioSource,
-    STTBackend,
-    STTResult,
-    TTSBackend,
-    TTSResult,
-)
+import httpx
+
+from config.settings import settings
 from .config import DEFAULT_SAMPLE_RATE, SUPPORTED_LANGUAGES
+from .interfaces import STTBackend, STTResult, TTSBackend, TTSResult
 
-logger = logging.getLogger(__name__)
-
-# ---------------------------------------------------------------------------
-# Environment variables expected in .env
-# ---------------------------------------------------------------------------
-# BHASHINI_API_KEY      – inference API key from the Bhashini portal
-# BHASHINI_USER_ID      – your registered user / org ID
-# BHASHINI_PIPELINE_ID  – pipeline ID that includes ASR + TTS tasks
-
-_BHASHINI_BASE_URL = "https://dhruva-api.bhashini.gov.in/services/inference"
+_BHASHINI_MT_URL = "https://api.bhashini.gov.in/v1/sarvam_translate"
 
 
-def _get_creds():
-    """Read Bhashini credentials from environment."""
-    return {
-        "api_key": os.getenv("BHASHINI_API_KEY", ""),
-        "user_id": os.getenv("BHASHINI_USER_ID", ""),
-        "pipeline_id": os.getenv("BHASHINI_PIPELINE_ID", ""),
-    }
+def _user_id() -> str:
+    return settings.BHASHINI_USER_ID or settings.BHASHINI_PIPELINE_ID or ""
 
 
-def _has_creds() -> bool:
-    creds = _get_creds()
-    return bool(creds["api_key"] and creds["user_id"])
+def _inference_api_key() -> str:
+    return settings.BHASHINI_INFERENCE_API_KEY or settings.BHASHINI_API_KEY or ""
 
 
-# ---------------------------------------------------------------------------
-# Bhashini STT Adapter
-# ---------------------------------------------------------------------------
+def is_configured() -> bool:
+    return bool(_user_id() and _inference_api_key())
+
+
+def _split_sentences(text: str, max_len: int = 450) -> list:
+    """Split long content into sentence-grouped chunks that fit the API."""
+    rough = [s.strip() for s in re.split(r"(?<=[.!?।।?|])\s+", text) if s.strip()]
+    chunks: list = []
+    current = ""
+    for s in rough:
+        if len(current) + len(s) > max_len and current:
+            chunks.append(current)
+            current = s
+        else:
+            current = f"{current} {s}".strip()
+    if current:
+        chunks.append(current)
+    return chunks or ([text[:max_len]] if text else [])
+
+
+def bhashini_translate(text: str, source_lang: str, target_lang: str) -> str:
+    """
+    Translate ``text`` from ``source_lang`` to ``target_lang`` using the
+    Bhashini NMT pipeline. Returns the translated text, or ``""`` on failure.
+    """
+    if not text or not is_configured() or source_lang == target_lang:
+        return ""
+
+    chunks = _split_sentences(text)
+    translated_parts: list = []
+
+    for chunk in chunks:
+        try:
+            response = httpx.post(
+                _BHASHINI_MT_URL,
+                headers={
+                    "Authorization": f"Bearer {_inference_api_key()}",
+                    "User-ID": _user_id(),
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "sourceLanguage": source_lang,
+                    "targetLanguage": target_lang,
+                    "sentences": [chunk],
+                },
+                timeout=45.0,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            pipeline_response = payload.get("pipelineResponse") or []
+            targets = [p.get("target", "") for p in pipeline_response if p.get("target")]
+            if not targets:
+                return ""
+            translated_parts.append(" ".join(targets))
+        except Exception as exc:
+            print(f"Bhashini translation failed for '{chunk[:40]}...': {exc}")
+            return ""
+
+    return "\n".join(translated_parts).strip()
+
 
 class BhashiniSTTBackend(STTBackend):
     """
-    Stub adapter for Bhashini's ASR (Automatic Speech Recognition) service.
-
-    Shows the exact HTTP request/response shape.  To make it live:
-    1. Register at https://bhashini.gov.in and get credentials.
-    2. Set ``BHASHINI_API_KEY``, ``BHASHINI_USER_ID``, ``BHASHINI_PIPELINE_ID``
-       in your ``.env`` file.
-    3. Replace the ``NotImplementedError`` with a real ``requests.post()`` call.
+    Bhashini ASR backend. Kept for interface compatibility — select it
+    explicitly only after wiring a Bhashini ASR pipeline serviceId.
     """
 
     @property
@@ -74,118 +106,23 @@ class BhashiniSTTBackend(STTBackend):
         return "bhashini-asr"
 
     def is_available(self) -> bool:
-        return _has_creds()
+        return is_configured()
 
-    def transcribe(self, audio: AudioInput) -> STTResult:
-        if not _has_creds():
-            return STTResult(
-                text="",
-                detected_language="unknown",
-                confidence=0.0,
-                engine=self.name,
-                error=(
-                    "Bhashini credentials not configured.  "
-                    "Set BHASHINI_API_KEY and BHASHINI_USER_ID in .env"
-                ),
-                is_empty=True,
-            )
-
-        # --- Build the request payload (for documentation) ---------------
-        #
-        # In a real implementation you would:
-        #   1. Read the audio bytes from audio.file_path / audio.audio_bytes
-        #   2. Base64-encode them
-        #   3. POST to the Bhashini inference endpoint
-        #
-        creds = _get_creds()
-
-        # Determine source language hint (Bhashini code)
-        source_lang = "hi"  # default hint
-        if audio.source == AudioSource.FILE and audio.file_path:
-            # In practice, you might pass the language detected by Whisper
-            # or let Bhashini auto-detect.
-            pass
-
-        _example_request = {
-            "url": f"{_BHASHINI_BASE_URL}/asr",
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json",
-                "Authorization": creds["api_key"],
-                "userID": creds["user_id"],
-            },
-            "body": {
-                "pipelineTasks": [
-                    {
-                        "taskType": "asr",
-                        "config": {
-                            "language": {
-                                "sourceLanguage": source_lang,
-                            },
-                            "serviceId": "<MODEL_SERVICE_ID>",
-                            "audioFormat": "wav",
-                            "samplingRate": 16000,
-                        },
-                    }
-                ],
-                "inputData": {
-                    "audio": [
-                        {
-                            "audioContent": "<BASE64_ENCODED_AUDIO>",
-                        }
-                    ],
-                },
-            },
-        }
-
-        _example_response = {
-            "pipelineResponse": [
-                {
-                    "taskType": "asr",
-                    "output": [
-                        {
-                            "source": "transcribed text here",
-                            "langDetected": source_lang,
-                        }
-                    ],
-                }
-            ]
-        }
-
-        logger.info(
-            "Bhashini ASR request shape:\n%s",
-            json.dumps(_example_request, indent=2, ensure_ascii=False),
+    def transcribe(self, audio, language=None) -> STTResult:
+        return STTResult(
+            text="",
+            detected_language=language or "unknown",
+            confidence=0.0,
+            engine=self.name,
+            error="Bhashini ASR pipeline not wired (use Sarvam or Whisper STT).",
+            is_empty=True,
         )
 
-        # -----------------------------------------------------------------
-        # TODO: Replace with actual HTTP call:
-        #
-        #   import requests
-        #   audio_b64 = base64.b64encode(audio_bytes).decode()
-        #   payload = { ... }  # use _example_request shape above
-        #   resp = requests.post(url, json=payload, headers=headers)
-        #   data = resp.json()
-        #   text = data["pipelineResponse"][0]["output"][0]["source"]
-        #   lang = data["pipelineResponse"][0]["output"][0]["langDetected"]
-        #   return STTResult(text=text, detected_language=lang, ...)
-        # -----------------------------------------------------------------
-
-        raise NotImplementedError(
-            "Bhashini ASR stub — replace with real API call.  "
-            "See the request/response shapes logged above."
-        )
-
-
-# ---------------------------------------------------------------------------
-# Bhashini TTS Adapter
-# ---------------------------------------------------------------------------
 
 class BhashiniTTSBackend(TTSBackend):
     """
-    Stub adapter for Bhashini's TTS (Text-to-Speech Synthesis) service.
-
-    Shows the exact HTTP request/response shape.  Same setup steps as the
-    ASR adapter above.
+    Bhashini TTS backend. Kept for interface compatibility — select it
+    explicitly only after wiring a Bhashini TTS pipeline serviceId.
     """
 
     @property
@@ -193,100 +130,16 @@ class BhashiniTTSBackend(TTSBackend):
         return "bhashini-tts"
 
     def is_available(self) -> bool:
-        return _has_creds()
+        return is_configured()
 
     def supports_language(self, language: str) -> bool:
-        # Bhashini supports all 22 scheduled Indian languages
         return language in SUPPORTED_LANGUAGES
 
     def synthesize(self, text: str, language: str) -> TTSResult:
-        if not _has_creds():
-            return TTSResult(
-                audio_bytes=b"",
-                sample_rate=DEFAULT_SAMPLE_RATE,
-                language=language,
-                engine=self.name,
-                error=(
-                    "Bhashini credentials not configured.  "
-                    "Set BHASHINI_API_KEY and BHASHINI_USER_ID in .env"
-                ),
-            )
-
-        if not text or not text.strip():
-            return TTSResult(
-                audio_bytes=b"",
-                sample_rate=DEFAULT_SAMPLE_RATE,
-                language=language,
-                engine=self.name,
-                error="Empty text — nothing to synthesize.",
-            )
-
-        creds = _get_creds()
-
-        _example_request = {
-            "url": f"{_BHASHINI_BASE_URL}/tts",
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json",
-                "Authorization": creds["api_key"],
-                "userID": creds["user_id"],
-            },
-            "body": {
-                "pipelineTasks": [
-                    {
-                        "taskType": "tts",
-                        "config": {
-                            "language": {
-                                "sourceLanguage": language,
-                            },
-                            "serviceId": "<MODEL_SERVICE_ID>",
-                            "gender": "female",
-                            "samplingRate": 22050,
-                        },
-                    }
-                ],
-                "inputData": {
-                    "input": [
-                        {
-                            "source": text,
-                        }
-                    ],
-                },
-            },
-        }
-
-        _example_response = {
-            "pipelineResponse": [
-                {
-                    "taskType": "tts",
-                    "audio": [
-                        {
-                            "audioContent": "<BASE64_ENCODED_WAV>",
-                            "audioUri": None,
-                        }
-                    ],
-                }
-            ]
-        }
-
-        logger.info(
-            "Bhashini TTS request shape:\n%s",
-            json.dumps(_example_request, indent=2, ensure_ascii=False),
-        )
-
-        # -----------------------------------------------------------------
-        # TODO: Replace with actual HTTP call:
-        #
-        #   import requests
-        #   payload = { ... }  # use _example_request shape above
-        #   resp = requests.post(url, json=payload, headers=headers)
-        #   data = resp.json()
-        #   audio_b64 = data["pipelineResponse"][0]["audio"][0]["audioContent"]
-        #   audio_bytes = base64.b64decode(audio_b64)
-        #   return TTSResult(audio_bytes=audio_bytes, ...)
-        # -----------------------------------------------------------------
-
-        raise NotImplementedError(
-            "Bhashini TTS stub — replace with real API call.  "
-            "See the request/response shapes logged above."
+        return TTSResult(
+            audio_bytes=b"",
+            sample_rate=DEFAULT_SAMPLE_RATE,
+            language=language,
+            engine=self.name,
+            error="Bhashini TTS pipeline not wired (use Sarvam or gTTS TTS).",
         )

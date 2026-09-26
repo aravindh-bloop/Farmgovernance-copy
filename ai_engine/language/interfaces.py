@@ -121,7 +121,7 @@ class STTBackend(ABC):
     """Contract that every Speech-to-Text engine must fulfil."""
 
     @abstractmethod
-    def transcribe(self, audio: AudioInput) -> STTResult:
+    def transcribe(self, audio: AudioInput, language: Optional[str] = None) -> STTResult:
         """Transcribe *audio* and return an :class:`STTResult`."""
         ...
 
