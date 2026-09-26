@@ -7,7 +7,7 @@
 [![Languages](https://img.shields.io/badge/Indic_Languages-11_Supported-orange.svg)](https://bhashini.gov.in/)
 [![Zero Hallucination](https://img.shields.io/badge/Zero--Hallucination-Verified_Gazettes-brightgreen.svg)](https://myscheme.gov.in)
 
-> **Team BRAVITS** | **Smart India Hackathon 2026** | **Problem Statement ID:** `SIH26088`  
+> **Team Synacle** | **Smart India Hackathon 2026** | **Problem Statement ID:** `SIH26088`  
 > **Theme:** Multilingual Cooperative Governance & Legal Assistance Chatbot
 
 ---
@@ -33,8 +33,11 @@ It delivers authenticated guidance on **Cooperative Laws**, **Ministry of Cooper
 
 ```bash
 # Clone the repository
-git clone https://github.com/sathyasubha07/MULTILINGUAL-COOPERATIVE-ASSISTANT-CHATBOT-.git
-cd MULTILINGUAL-COOPERATIVE-ASSISTANT-CHATBOT-
+git clone https://github.com/aravindh-bloop/Farmgovernance-copy.git
+cd Farmgovernance-copy
+
+# Navigate to backend directory
+cd backend
 
 # Create and activate virtual environment
 python -m venv .venv
@@ -71,7 +74,8 @@ cd frontend-web && npm install && cd ..
 #### 🔹 Option B: Run in Separate Terminals
 1. **Backend API (`Port 8000`):**
    ```bash
-   python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
+   cd backend
+   python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
    ```
 2. **Kiosk Frontend (`Port 5173`):**
    ```bash
@@ -104,6 +108,7 @@ cd frontend-web && npm install && cd ..
 | **3. PMFBY Crop Insurance** | 72-hour calamity intimation SLA, crop loss claims, toll-free `14447` routing. |
 | **4. Financial Literacy** | KCC Scale of Finance calculation, 4% effective interest subvention, ₹1.60 Lakh collateral-free limit. |
 | **5. Grievance Redressal** | 4-tier statutory escalation ladder, designated authority contact directory (`madurai.nic.in`, etc.). |
+| **6. Officer/Authority Recommendation** | Resolves scheme designations into specific regional officers automatically using District and scheme data. |
 
 ---
 

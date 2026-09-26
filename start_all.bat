@@ -2,12 +2,12 @@
 TITLE Multilingual Cooperative AI Portal - Launcher
 echo =====================================================================
 echo  Multilingual Cooperative Governance & Legal Assistance Portal
-echo  Team BRAVITS - SIH26088
+echo  Team Synacle - SIH26088
 echo =====================================================================
 echo.
 
 echo [1/3] Starting FastAPI Backend on http://localhost:8000 ...
-start "Backend API (Port 8000)" cmd /k "python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload"
+start "Backend API (Port 8000)" cmd /k "cd backend && call .venv\Scripts\activate && python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
 timeout /t 3 /nobreak >nul
 
