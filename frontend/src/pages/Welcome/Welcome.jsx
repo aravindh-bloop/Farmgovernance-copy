@@ -26,7 +26,6 @@ const SPEECH_BUBBLE_TEXT = {
   bn: { line1: 'নমস্কার!', line2: 'আমি Arav AI।', line3: 'কী সাহায্য চাই?' },
   ml: { line1: 'നമസ്കാരം!', line2: 'ഞാൻ Arav AI.', line3: 'എന്ത് സഹായം?' },
   pa: { line1: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ!', line2: 'ਮੈਂ Arav AI ਹਾਂ।', line3: 'ਕੀ ਮਦਦ ਚਾਹੀਦੀ?' },
-  pa: { line1: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ!', line2: 'ਮੈਂ Arav AI ਹਾਂ।', line3: 'ਕੀ ਮਦਦ ਚਾਹੀਦੀ?' },
   or: { line1: 'ନମସ୍କାର!', line2: 'ମୁଁ Arav AI।', line3: 'କଣ ସାହାଯ୍ୟ?' },
 };
 
@@ -111,6 +110,7 @@ function useUserTag() {
    ════════════════════════════════════════════════════════════════════ */
 export default function Welcome({ onStart }) {
   const { language, setLanguage } = useLanguage();
+  const userTag = useUserTag();
   const bubble = SPEECH_BUBBLE_TEXT[language] || SPEECH_BUBBLE_TEXT.en;
 
   // Actual Location Fetcher
@@ -160,8 +160,9 @@ export default function Welcome({ onStart }) {
       <div className="arav-home__overlay" />
 
       {/* ── HEADER ── */}
-      <header className="arav-header" role="banner">
-        <div className="arav-header__inner">
+      {!chatOpen && (
+        <header className="arav-header" role="banner">
+          <div className="arav-header__inner">
           <div className="arav-header__brand">
             <img src="/images/logo.png" alt="Arav AI" className="arav-header__logo" width="56" height="56" />
             <div className="arav-header__brand-text">
@@ -203,6 +204,7 @@ export default function Welcome({ onStart }) {
           </div>
         </div>
       </header>
+      )}
 
       {/* ── HERO ── */}
       <main className="arav-main">
