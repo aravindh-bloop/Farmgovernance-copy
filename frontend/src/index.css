@@ -1274,18 +1274,22 @@ body {
 /* A compact window in the corner, not a new page: the greeting, the big
    microphone and the topic cards all stay visible and reachable behind it. */
 .kiosk-chat-overlay {
-  /* Fixed, not absolute: the Arav AI home page scrolls (hero, assistance grid,
-     footer), so an absolutely positioned window anchored to the document
-     bottom sits below the fold on short kiosks and is invisible. Anchoring to
-     the viewport keeps it on screen at every height. */
+  /* A large centred panel, not a card in the corner. Somebody standing a metre
+     back has to be able to read the conversation, and the greeting, mascot,
+     microphone and topic cards stay visible around the edges.
+     Fixed, not absolute: the Arav AI home page is taller than a short kiosk
+     viewport, so a document-anchored window would sit below the fold. */
   position: fixed;
-  right: clamp(10px, 1.6vw, 20px);
-  bottom: clamp(10px, 1.6vh, 20px);
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   z-index: 40;
   display: flex;
   flex-direction: column;
-  width: min(560px, 100%);
-  height: min(76vh, 100%);
+  width: min(1120px, 78vw);
+  height: min(80vh, 880px);
+  max-width: calc(100vw - 20px);
+  max-height: calc(100dvh - 20px);
   overflow: hidden;
   border: 1px solid var(--k-line);
   border-radius: 20px;
@@ -1296,8 +1300,8 @@ body {
 /* Translate only: a scale transform would make the window overshoot its own
    bounds mid-animation and is needless work on modest kiosk hardware. */
 @keyframes kioskWindowIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 18px)); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
 }
 .kiosk-chat-overlay-topbar {
   display: flex;
@@ -1486,7 +1490,7 @@ body {
   .kiosk-live-status { font-size: 9px; }
   .kiosk-brand-lockup span { font-size: 8px; }
   .kiosk-language-pill { padding: 6px 9px; font-size: 9px; }
-  .kiosk-chat-overlay { width: min(520px, 100%); height: min(82vh, 100%); }
+  .kiosk-chat-overlay { width: min(1120px, 90vw); height: min(84dvh, 880px); }
   .kiosk-chat-overlay-actions { gap: 6px; }
   .kiosk-chat-overlay-actions .kiosk-overlay-btn { padding: 8px 10px; }
   .kiosk-chat-overlay-actions .kiosk-overlay-btn span { font-size: 10px; }
@@ -1513,27 +1517,19 @@ body {
   .ereport-dock { right: 8px; bottom: 8px; left: 8px; align-items: stretch; }
   .ereport-chip { justify-content: center; }
   .kiosk-chat-overlay-body { padding: 6px 6px 70px; }
-  /* Full width on a phone, still a window rather than a new page. */
+  /* Full width on a phone, still a window on the same page. */
   .kiosk-chat-overlay {
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
-    width: auto;
-    height: min(84vh, 100%);
+    width: calc(100vw - 16px);
+    height: min(84dvh, 880px);
   }
   .kiosk-chat-overlay-topbar { padding: 9px 10px; }
   .kiosk-brand-mark { width: 30px; height: 30px; border-radius: 10px; }
   .kiosk-overlay-btn span { display: none; }
   .kiosk-overlay-btn { padding: 8px; }
-  /* Still a window on a phone: leave the greeting visible above it. */
+  /* Stay under the mobile URL bar so no sliver hangs past the fold. */
   .kiosk-chat-overlay {
-    right: 8px;
-    bottom: 8px;
-    left: 8px;
-    width: auto;
-    /* vh includes the mobile URL bar, so stay under it to avoid a sliver of
-       the window hanging past the fold. */
-    height: min(70vh, 100%);
+    width: calc(100vw - 16px);
+    height: min(80dvh, 880px);
   }
 }
 
@@ -1592,6 +1588,15 @@ body {
    goes; everything it showed is already in the topbar. */
 @media (max-height: 560px) {
   .chat-header { display: none; }
+}
+
+/* Phones: the centred panel takes nearly the full width and a little more of
+   the height, since there is no side content to keep visible. */
+@media (max-width: 768px) {
+  .kiosk-chat-overlay {
+    width: calc(100vw - 16px);
+    height: min(88dvh, 880px);
+  }
 }
 
 @media (max-height: 460px) {
