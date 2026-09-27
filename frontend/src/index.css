@@ -265,7 +265,8 @@ body {
 
 /* Chat container */
 .chat-container {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   background: var(--bg-card);
@@ -305,9 +306,10 @@ body {
 }
 
 .chat-messages {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
-  padding: 20px 16px;
+  padding: clamp(8px, 2dvh, 20px) 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -318,7 +320,7 @@ body {
   text-align: center;
   color: var(--text-muted);
   font-size: 14px;
-  padding: 40px 20px;
+  padding: clamp(8px, 4dvh, 40px) 20px;
   line-height: 1.6;
 }
 
@@ -604,7 +606,7 @@ body {
   display: flex;
   align-items: flex-end;
   gap: 10px;
-  padding: 12px 16px;
+  padding: clamp(6px, 1.4dvh, 12px) 16px;
   border-top: 1px solid var(--border-light);
   background: #fff;
 }
@@ -980,6 +982,7 @@ body {
 .app-root:has(.kiosk-portal) .theme-toggle { display: none; }
 .app-root:has(.kiosk-chat-portal) .theme-toggle,
 .app-root:has(.kiosk-chat-portal) > .app-footer { display: none; }
+.app-root:has(.arav-home) > .app-footer { display: none; }
 
 .kiosk-stage {
   position: relative;
@@ -1111,13 +1114,17 @@ body {
 .language-kiosk-option span { color: #8588a3; font-size: 8px; font-weight: 700; letter-spacing: .12em; }
 
 .kiosk-chat-portal {
-  min-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   padding: 14px;
   background: #e9eafe;
 }
 .kiosk-chat-shell {
   display: flex;
-  min-height: calc(100vh - 28px);
+  flex: 1 1 auto;
+  min-height: 0;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(146, 148, 196, .42);
@@ -1129,8 +1136,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 78px;
-  padding: 18px 28px;
+  min-height: 0;
+  padding: clamp(8px, 2dvh, 18px) clamp(12px, 2vw, 28px);
   border-bottom: 1px solid rgba(151, 153, 196, .22);
 }
 .kiosk-chat-title { color: #30334f; font-size: 15px; font-weight: 700; }
@@ -1318,15 +1325,21 @@ body {
   transition: background .18s ease, border-color .18s ease;
 }
 .kiosk-overlay-btn:hover { background: var(--k-card-strong); border-color: var(--k-purple-soft); }
+.kiosk-chat-overlay .chat-header { display: none; }
 .kiosk-chat-overlay-body {
   display: flex;
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   justify-content: center;
   padding: clamp(8px, 1.6vh, 18px) clamp(8px, 3vw, 28px) clamp(10px, 2vh, 24px);
 }
 .kiosk-chat-overlay-body .chat-container {
   width: 100%;
+  /* Fill the window exactly. Without an explicit height the container fell back
+     to the base max-height:700px and grew past the window, so the microphone and
+     the text field were clipped off the bottom. */
+  height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -1569,4 +1582,26 @@ body {
   .kiosk-brand-lockup span { display: none; }
   .kiosk-services-heading { display: none; }
   :root { --k-orb-size: clamp(56px, 18vh, 80px); }
+}
+
+/* Short kiosk windows (landscape phones, 273px tall): the empty-state hint is
+   the first thing to go, since the microphone is the only call to action. */
+/* The conversation screen carries two headers: the kiosk topbar (brand, title,
+   language) and ChatBox's own .chat-header. On a short window together they
+   eat 219px and squeeze the input bar off screen, so the redundant inner one
+   goes; everything it showed is already in the topbar. */
+@media (max-height: 560px) {
+  .chat-header { display: none; }
+}
+
+@media (max-height: 460px) {
+  .chat-empty-hint { display: none; }
+  /* 48px round controls do not fit a 273px-tall window once the topbar and
+     the send button are placed, so the whole bar was pushed below the fold. */
+  .voice-btn { width: 38px; height: 38px; }
+  .chat-text-input { padding: 7px 12px; }
+  .kiosk-btn-primary, .chat-send-btn { padding: 8px 12px; }
+  .chat-input-bar { gap: 6px; }
+  .kiosk-chat-topbar { padding: 8px 12px; }
+  .kiosk-chat-title { font-size: 0.95rem; }
 }

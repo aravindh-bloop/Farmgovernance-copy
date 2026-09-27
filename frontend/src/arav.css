@@ -1,7 +1,10 @@
 /* ── Arav Home Container ── */
 .arav-home {
   position: relative;
-  min-height: 100vh;
+  /* Exactly one viewport, no page scroll. The content below is sized in dvh so
+     it compresses to fit rather than spilling past the bottom edge. */
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   font-family: var(--arav-font, 'Inter', sans-serif);
@@ -38,6 +41,7 @@
 
 /* ── Header ── */
 .arav-header {
+  flex-shrink: 0;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -101,20 +105,20 @@
 .arav-lang-opt__code { font-size: 0.7rem; color: #94a3b8; }
 
 /* ── Main ── */
-.arav-main { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; }
+.arav-main { position: relative; z-index: 2; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 
 /* ── Hero ── */
 .arav-hero { padding: 0 1.5rem; max-width: 1500px; margin: 0 auto; width: 100%; position: relative; z-index: 2; }
 .arav-hero__layout {
-  display: flex; align-items: center; justify-content: center; height: 60vh; min-height: 500px;
+  display: flex; align-items: center; justify-content: center; height: clamp(190px, 42dvh, 560px); min-height: 0;
   position: relative;
 }
 
 /* Mascot */
 .arav-hero__mascot-area { position: absolute; left: -150px; bottom: 0; display: flex; align-items: flex-end; z-index: 5; }
-.arav-mascot { position: relative; display: flex; flex-direction: column; align-items: center; transform: translateY(120px); /* Moved further downwards */ }
+.arav-mascot { position: relative; display: flex; flex-direction: column; align-items: center; transform: translateY(clamp(0px, 7dvh, 72px)); }
 .arav-mascot__img {
-  width: 460px; /* Reduced from 520px */ height: auto; object-fit: contain;
+  width: min(460px, 44dvh, 46vw); height: auto; object-fit: contain;
   filter: drop-shadow(0 16px 40px rgba(0,0,0,0.25));
   user-select: none; pointer-events: none;
 }
@@ -170,14 +174,14 @@
 .arav-hero__hint { font-size: 0.82rem; color: #64748b; line-height: 1.5; }
 
 /* ── Mic CTA ── */
-.arav-mic-cta { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2rem; position: relative; width: 200px; height: 200px; }
-.arav-mic-rings { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 190px; height: 190px; pointer-events: none; z-index: 1; }
+.arav-mic-cta { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: clamp(0.3rem, 1.6dvh, 2rem); position: relative; width: clamp(104px, 22dvh, 200px); height: clamp(104px, 22dvh, 200px); }
+.arav-mic-rings { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: clamp(99px, 21dvh, 190px); height: clamp(99px, 21dvh, 190px); pointer-events: none; z-index: 1; }
 .arav-mic-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(9,117,63,0.25); animation: aravRingPulse 3s ease-in-out infinite; }
 .arav-mic-ring--2 { inset: -20px; animation-delay: 0.5s; border-color: rgba(9,117,63,0.15); }
 .arav-mic-ring--3 { inset: -40px; animation-delay: 1s; border-color: rgba(9,117,63,0.08); }
 @keyframes aravRingPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.5; } }
 .arav-mic-btn {
-  position: relative; z-index: 3; width: 130px; height: 130px; border-radius: 50%; border: none;
+  position: relative; z-index: 3; width: clamp(68px, 14dvh, 130px); height: clamp(68px, 14dvh, 130px); border-radius: 50%; border: none;
   background: #09753F; color: #fff; cursor: pointer;
   display: flex; align-items: center; justify-content: center; font-family: inherit;
   box-shadow: 0 16px 40px rgba(9,117,63,0.5), inset 0 2px 0 rgba(255,255,255,0.2);
@@ -207,7 +211,8 @@
   box-shadow: 0 24px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.4) inset;
   padding: 1rem 1.25rem 0.5rem; /* Even smaller padding */
   max-width: 1700px;
-  margin: 20px auto 3rem; /* Moved downwards */
+  margin: clamp(6px, 1.4dvh, 20px) auto clamp(6px, 1.8dvh, 3rem);
+  flex-shrink: 0;
   width: calc(100% - 2rem);
 }
 
@@ -255,9 +260,10 @@
 
 /* ── Footer ── */
 .arav-footer {
+  flex-shrink: 0;
   position: relative; z-index: 2;
   border-top: 1px solid rgba(0,0,0,0.06);
-  padding: 1rem 0 0;
+  padding: clamp(0.3rem, 1.1dvh, 1rem) 0 0;
   margin-top: 0;
 }
 .arav-footer, .arav-footer__left, .arav-footer__right {
@@ -331,8 +337,8 @@
 @media (max-width: 1200px) {
   .arav-assist__grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; }
   .arav-lang-selection-grid { grid-template-columns: repeat(3, 1fr); }
-  .arav-hero__title { font-size: 4rem; }
-  .arav-hero__subtitle { font-size: 1.5rem; }
+  .arav-hero__title { font-size: clamp(2rem, 6.4dvh, 4rem); }
+  .arav-hero__subtitle { font-size: clamp(1rem, 2.4dvh, 1.5rem); }
   .arav-mascot__img { width: 360px; }
   .arav-hero__mascot-area { left: -50px; }
 }
@@ -343,20 +349,73 @@
 }
 
 @media (max-width: 768px) {
-  .arav-header__inner { flex-direction: column; gap: 1rem; padding: 1rem; border-radius: 20px; }
-  .arav-header__controls { flex-wrap: wrap; justify-content: center; }
+  .arav-header__inner { flex-direction: column; gap: 0.5rem; padding: 0.6rem 0.75rem; border-radius: 16px; }
+  .arav-header__controls { flex-wrap: wrap; justify-content: center; gap: 0.4rem; }
+  .arav-header__logo { width: 40px; height: 40px; border-radius: 10px; }
+  .arav-header__tagline-text { font-size: 0.72rem; }
+  .arav-hero__layout { height: clamp(140px, 28dvh, 300px); }
   
-  .arav-hero__title { font-size: 3rem; }
-  .arav-hero__subtitle { font-size: 1.25rem; }
+  .arav-hero__title { font-size: clamp(1.8rem, 5dvh, 3rem); }
+  .arav-hero__subtitle { font-size: clamp(0.95rem, 2.2dvh, 1.25rem); }
   .arav-hero__desc { font-size: 0.9rem; }
   
   .arav-hero__mascot-area { display: none; }
   
-  .arav-assist__grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .arav-assist__grid { grid-template-columns: repeat(2, 1fr); gap: 0.4rem; }
+  .arav-card { min-height: 0; padding: 0.4rem 0.5rem; gap: 0.2rem; }
+  .arav-card__icon { width: 24px; height: 24px; }
+  .arav-card__icon svg { width: 15px; height: 15px; }
+  .arav-card__title { font-size: 0.78rem; margin-bottom: 0; }
+  .arav-card__desc { display: none; }
+  .arav-assist__header { margin-bottom: 0.4rem; }
+  .arav-assist__title { font-size: 1rem; }
+  .arav-bottom-sheet {
+    padding: 0.6rem 0.6rem 0.2rem; width: calc(100% - 0.75rem);
+    border-radius: 16px; margin: 4px auto 0.4rem;
+  }
+  .arav-footer { display: none; }
   
   .arav-bottom-sheet { padding: 1rem; margin: 10px auto 2rem; border-radius: 16px; }
   
   .arav-footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+}
+
+@media (max-height: 620px) {
+  .arav-hero__layout { height: clamp(120px, 30dvh, 300px); }
+  .arav-hero__title { font-size: 1.9rem; }
+  .arav-hero__desc, .arav-assist__hint, .arav-hero__hint { display: none; }
+  .arav-card { min-height: 0; padding: 0.45rem 0.55rem; }
+  .arav-card__desc { display: none; }
+  .arav-assist__grid { gap: 0.45rem; }
+  .arav-assist__header { margin-bottom: 0.4rem; }
+  .arav-assist__title { font-size: 1rem; }
+  .arav-header__inner { padding: 0.45rem 0.9rem; }
+  .arav-header__logo { width: 40px; height: 40px; border-radius: 10px; }
+  .arav-bottom-sheet { margin-top: 4px; }
+}
+
+/* Very short windows, e.g. 740x360 landscape. The footer strip and the
+   assistance hint are the least useful pixels on screen, so they go. */
+/* Short landscape: a 254px card sheet cannot share a 273px window with the
+   hero, so the hero keeps only the microphone and the six topics collapse to
+   one tappable icon row. Nothing becomes unreachable. */
+@media (max-height: 460px) {
+  .arav-hero__title, .arav-hero__subtitle, .arav-hero__desc,
+  .arav-hero__hint, .arav-hero__badge { display: none; }
+  .arav-hero__layout { height: clamp(80px, 30dvh, 118px); }
+  .arav-assist__header { display: none; }
+  .arav-assist { margin-bottom: 0; }
+  .arav-assist__grid { grid-template-columns: repeat(6, 1fr); gap: 0.3rem; }
+  .arav-card { align-items: center; padding: 0.3rem 0.2rem; }
+  .arav-card__body { display: none; }
+  .arav-bottom-sheet { padding: 0.35rem; margin: 2px auto 0.2rem; border-radius: 12px; }
+  .arav-footer { display: none; }
+  .arav-hero__subtitle { font-size: 0.95rem; }
+  .arav-hero__badge { display: none; }
+  .arav-assist { margin-bottom: 0.5rem; }
+  .arav-hero__mascot-area { display: none; }
+  .arav-mic-ring--2, .arav-mic-ring--3 { display: none; }
+  .arav-mascot { transform: none; }
 }
 
 /* Portrait Kiosk (e.g. 1080x1920) */
