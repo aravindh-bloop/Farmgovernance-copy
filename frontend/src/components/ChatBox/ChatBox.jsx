@@ -22,7 +22,7 @@ const SLIDING_LANGUAGES = [
   { code: 'or', name: 'Odia', native: 'ଓଡ଼ିଆ' },
 ];
 
-export default function ChatBox({ initialQuery = '', onConversationState }) {
+export default function ChatBox({ initialQuery = '', onConversationState, autoListen = false }) {
   const { language, setLanguage, t } = useLanguage();
   const [messages, setMessages] = useState([]);
   const [inputQuery, setInputQuery] = useState('');
@@ -32,6 +32,21 @@ export default function ChatBox({ initialQuery = '', onConversationState }) {
   const audioUnlockedRef = useRef(false);
   const messagesEndRef = useRef(null);
   const sliderRef = useRef(null);
+  const voiceInputRef = useRef(null);
+
+  // One press on the kiosk orb should open the window already listening, so the
+  // citizen can just start talking. Only for the empty-orb entry point: a
+  // service card already supplies a question to answer.
+  //
+  // No "already fired" ref here on purpose: StrictMode mounts, unmounts and
+  // remounts in development, and a one-shot guard would swallow the timer on
+  // the second pass and never start listening. Depending on the prop alone
+  // means the effect re-arms itself and fires exactly once per mount.
+  useEffect(() => {
+    if (!autoListen) return undefined;
+    const id = setTimeout(() => voiceInputRef.current?.start(), 260);
+    return () => clearTimeout(id);
+  }, [autoListen]);
 
   // Unlock browser autoplay on first interaction so assistant answers can
   // auto-speak on the touch kiosk (Chromium blocks play() until a user gesture).
@@ -694,7 +709,7 @@ export default function ChatBox({ initialQuery = '', onConversationState }) {
           handleTextSend(inputQuery);
         }}
       >
-        <VoiceInput onVoiceResult={handleVoiceInput} disabled={isLoading} />
+        <VoiceInput ref={voiceInputRef} onVoiceResult={handleVoiceInput} disabled={isLoading} />
 
         <input
           type="text"

@@ -1,15 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { Mic, Square } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 
-export default function VoiceInput({ onVoiceResult, disabled }) {
+// The parent can start listening without a second tap, which is what the kiosk
+// needs: one press on the big orb opens the window and begins recording.
+const VoiceInput = forwardRef(function VoiceInput({ onVoiceResult, disabled }, ref) {
   const { language, t } = useLanguage();
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const recognitionRef = useRef(null);
 
-  const startRecording = async () => {
+  const startRecording = useCallback(async () => {
+    // Guard against a second start (rapid re-mount, or auto-listen racing a tap)
+    // which would otherwise leave two MediaRecorders running on one stream.
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') return;
     setIsRecording(true);
     audioChunksRef.current = [];
 
@@ -82,9 +87,9 @@ export default function VoiceInput({ onVoiceResult, disabled }) {
       console.warn('Microphone access not available or denied:', err);
       mediaRecorderRef.current = null;
     }
-  };
+  }, [language, onVoiceResult]);
 
-  const stopRecording = () => {
+  const stopRecording = useCallback(() => {
     setIsRecording(false);
     if (recognitionRef.current) {
       try {
@@ -100,7 +105,16 @@ export default function VoiceInput({ onVoiceResult, disabled }) {
         onVoiceResult(null, '');
       }
     }
-  };
+  }, [onVoiceResult]);
+
+  // Lets the kiosk open the conversation already listening, so nobody has to
+  // find the microphone a second time.
+  useImperativeHandle(ref, () => ({
+    start: () => {
+      if (!disabled) startRecording();
+    },
+    stop: () => stopRecording(),
+  }), [disabled, startRecording, stopRecording]);
 
   const handleMicClick = () => {
     if (isRecording) {
@@ -133,6 +147,8 @@ export default function VoiceInput({ onVoiceResult, disabled }) {
       )}
     </div>
   );
-}
+});
+
+export default VoiceInput;
 
 

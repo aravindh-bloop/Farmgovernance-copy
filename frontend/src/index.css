@@ -1174,6 +1174,11 @@ body {
   .kiosk-chat-body .chat-send-btn span { display: none; }
 }
 
+@media (max-width: 380px) {
+  .kiosk-chat-overlay { height: min(70vh, 100%); }
+  .kiosk-orb { width: 60%; height: 60%; }
+}
+
 @media (max-width: 520px) {
   .language-grid { grid-template-columns: repeat(2, minmax(110px, 1fr)); }
   .language-welcome-content { padding: 14px 16px 24px; }
@@ -1184,7 +1189,8 @@ body {
   .kiosk-portal { padding: 0; }
   .kiosk-stage { min-height: 100vh; border-radius: 0; }
   .kiosk-topbar { padding: 20px 18px; }
-  .kiosk-brand-lockup span, .kiosk-live-status { display: none; }
+  /* Shrink rather than hide: the status and the tagline stay on screen. */
+  .kiosk-brand-lockup span, .kiosk-live-status { font-size: 8px; }
   .kiosk-services { padding: 16px 12px 18px; }
   .kiosk-services-heading { padding: 0 4px; }
   .kiosk-services-heading small { display: none; }
@@ -1257,18 +1263,34 @@ body {
 }
 
 /* The conversation opens over the welcome page instead of navigating away. */
-.kiosk-stage.is-conversing .kiosk-welcome-content,
-.kiosk-stage.is-conversing .kiosk-services,
-.kiosk-stage.is-conversing .kiosk-footer-strip { visibility: hidden; }
 
+/* A compact window in the corner, not a new page: the greeting, the big
+   microphone and the topic cards all stay visible and reachable behind it. */
 .kiosk-chat-overlay {
-  position: absolute;
-  inset: 0;
+  /* Fixed, not absolute: the Arav AI home page scrolls (hero, assistance grid,
+     footer), so an absolutely positioned window anchored to the document
+     bottom sits below the fold on short kiosks and is invisible. Anchoring to
+     the viewport keeps it on screen at every height. */
+  position: fixed;
+  right: clamp(10px, 1.6vw, 20px);
+  bottom: clamp(10px, 1.6vh, 20px);
   z-index: 40;
   display: flex;
   flex-direction: column;
+  width: min(560px, 100%);
+  height: min(76vh, 100%);
+  overflow: hidden;
+  border: 1px solid var(--k-line);
+  border-radius: 20px;
   background: linear-gradient(135deg, #f4f4ff 0%, #e8e9fb 52%, #dfe3fa 100%);
-  animation: kioskFade .22s ease;
+  box-shadow: 0 26px 60px rgba(72, 70, 130, .28), 0 2px 0 rgba(255, 255, 255, .7) inset;
+  animation: kioskWindowIn .28s cubic-bezier(.22, 1, .36, 1);
+}
+/* Translate only: a scale transform would make the window overshoot its own
+   bounds mid-animation and is needless work on modest kiosk hardware. */
+@keyframes kioskWindowIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
 }
 .kiosk-chat-overlay-topbar {
   display: flex;
@@ -1304,7 +1326,7 @@ body {
   padding: clamp(8px, 1.6vh, 18px) clamp(8px, 3vw, 28px) clamp(10px, 2vh, 24px);
 }
 .kiosk-chat-overlay-body .chat-container {
-  width: min(940px, 100%);
+  width: 100%;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -1322,8 +1344,8 @@ body {
 /* Optional paperwork, kept in the corner. */
 .ereport-dock {
   position: absolute;
-  right: clamp(10px, 2vw, 22px);
-  bottom: clamp(10px, 2vh, 22px);
+  right: clamp(8px, 1.4vw, 14px);
+  bottom: clamp(8px, 1.4vh, 14px);
   z-index: 60;
   display: flex;
   flex-direction: column;
@@ -1444,11 +1466,17 @@ body {
   .kiosk-eyebrow { font-size: clamp(8px, 2.2vmin, 10px); letter-spacing: .12em; }
   .kiosk-service-dock { display: grid; grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)); gap: 8px; }
   .kiosk-service-card { font-size: 10px; }
-  .kiosk-topbar { flex-wrap: wrap; gap: 10px; padding: 16px 18px; }
-  .kiosk-status-row { flex-wrap: wrap; gap: 8px; }
-  .kiosk-live-status { display: none; }
-  .kiosk-chat-overlay-actions .kiosk-overlay-btn span { display: none; }
-  .kiosk-chat-overlay-actions .kiosk-overlay-btn { padding: 9px; }
+  .kiosk-topbar { flex-wrap: wrap; gap: 8px 10px; padding: 14px 16px; }
+  .kiosk-status-row { flex-wrap: wrap; gap: 6px 8px; }
+  .kiosk-topbar, .kiosk-status-row { min-width: 0; }
+  /* Shrink, never hide: the status and the tags stay readable at every size. */
+  .kiosk-live-status { font-size: 9px; }
+  .kiosk-brand-lockup span { font-size: 8px; }
+  .kiosk-language-pill { padding: 6px 9px; font-size: 9px; }
+  .kiosk-chat-overlay { width: min(520px, 100%); height: min(82vh, 100%); }
+  .kiosk-chat-overlay-actions { gap: 6px; }
+  .kiosk-chat-overlay-actions .kiosk-overlay-btn { padding: 8px 10px; }
+  .kiosk-chat-overlay-actions .kiosk-overlay-btn span { font-size: 10px; }
 }
 
 /* Very tall portrait kiosks: give the mic the extra room. */
@@ -1463,13 +1491,82 @@ body {
 
 /* Narrow phones. */
 @media (max-width: 520px) {
-  .kiosk-brand-lockup span { display: none; }
+  .kiosk-brand-lockup span { font-size: 8px; }
   .kiosk-user-tag { font-size: 9px; padding: 7px 9px; }
   .kiosk-service-dock { grid-template-columns: repeat(auto-fit, minmax(74px, 1fr)); gap: 6px; }
   .kiosk-service-card { font-size: 9px; padding: 9px 4px; }
   .service-icon { width: 36px; height: 36px; }
   .service-icon svg { width: 18px; height: 18px; }
-  .ereport-dock { right: 10px; bottom: 10px; left: 10px; align-items: stretch; }
+  .ereport-dock { right: 8px; bottom: 8px; left: 8px; align-items: stretch; }
   .ereport-chip { justify-content: center; }
-  .kiosk-chat-overlay-body { padding: 6px 6px 74px; }
+  .kiosk-chat-overlay-body { padding: 6px 6px 70px; }
+  /* Full width on a phone, still a window rather than a new page. */
+  .kiosk-chat-overlay {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    height: min(84vh, 100%);
+  }
+  .kiosk-chat-overlay-topbar { padding: 9px 10px; }
+  .kiosk-brand-mark { width: 30px; height: 30px; border-radius: 10px; }
+  .kiosk-overlay-btn span { display: none; }
+  .kiosk-overlay-btn { padding: 8px; }
+  /* Still a window on a phone: leave the greeting visible above it. */
+  .kiosk-chat-overlay {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    /* vh includes the mobile URL bar, so stay under it to avoid a sliver of
+       the window hanging past the fold. */
+    height: min(70vh, 100%);
+  }
+}
+
+/* Height-driven overrides last: these must beat the orientation and
+   max-width rules above, which otherwise re-inflate the orb on short screens. */
+/* Short viewports (small phones, short landscape): the fixed pieces simply do
+   not fit, so the orb and the padding give way instead of the page scrolling. */
+@media (max-height: 780px) {
+  .kiosk-footer-strip { display: none; }
+  .kiosk-welcome-content { padding-top: 8px; padding-bottom: 10px; }
+  .kiosk-eyebrow { margin-bottom: 8px; }
+  .kiosk-instruction { margin-top: 10px; line-height: 1.45; }
+  .kiosk-services { padding: 12px 14px 14px; }
+  .kiosk-service-dock { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+  .kiosk-service-card { padding: 8px 3px; font-size: 8px; gap: 5px; }
+  .service-icon { width: 30px; height: 30px; }
+  .service-icon svg { width: 15px; height: 15px; }
+}
+@media (max-height: 780px) and (orientation: portrait) {
+  :root { --k-orb-size: clamp(96px, 26vmin, 150px); }
+}
+@media (max-height: 620px) {
+  .kiosk-welcome-content h1 { font-size: clamp(24px, 7vh, 34px); }
+  .kiosk-welcome-content h2 { font-size: clamp(15px, 4.4vh, 22px); }
+  .kiosk-instruction { display: none; }
+  .kiosk-services-heading small { display: none; }
+  :root { --k-orb-size: clamp(80px, 22vh, 120px); }
+}
+/* Very short viewports: landscape phones and 320x640 class devices. */
+@media (max-height: 520px) {
+  .kiosk-topbar { padding: 10px 14px; }
+  .kiosk-brand-mark { width: 28px; height: 28px; border-radius: 9px; }
+  .kiosk-welcome-content { padding: 6px 12px 8px; }
+  .kiosk-eyebrow { display: none; }
+  .kiosk-services { padding: 8px 12px 10px; }
+  .kiosk-services-heading { margin-bottom: 7px; }
+  .kiosk-service-dock { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
+  .kiosk-service-card { padding: 6px 2px; font-size: 7px; gap: 4px; }
+  .service-icon { width: 24px; height: 24px; }
+  .service-icon svg { width: 12px; height: 12px; }
+  :root { --k-orb-size: clamp(64px, 20vh, 96px); }
+}
+@media (max-height: 430px) {
+  .kiosk-welcome-content h1 { font-size: 22px; }
+  .kiosk-welcome-content h2 { font-size: 13px; margin-top: 4px; }
+  .kiosk-brand-lockup span { display: none; }
+  .kiosk-services-heading { display: none; }
+  :root { --k-orb-size: clamp(56px, 18vh, 80px); }
 }

@@ -140,6 +140,7 @@ export default function Welcome({ onStart }) {
   // Chat overlay state (existing functionality preserved)
   const [chatOpen, setChatOpen] = useState(false);
   const [seed, setSeed] = useState('');
+  const [autoListen, setAutoListen] = useState(false);
   const [turns, setTurns] = useState([]);
   const [chatBusy, setChatBusy] = useState(false);
 
@@ -148,9 +149,16 @@ export default function Welcome({ onStart }) {
     setChatBusy(next.isLoading);
   }, []);
 
-  const openChat = (initialQuery = '') => {
+  const openChat = (initialQuery = '', listen = false) => {
     setSeed(initialQuery);
+    setAutoListen(listen);
     setChatOpen(true);
+  };
+
+  const closeChat = () => {
+    setChatOpen(false);
+    setSeed('');
+    setAutoListen(false);
   };
 
   return (
@@ -160,8 +168,7 @@ export default function Welcome({ onStart }) {
       <div className="arav-home__overlay" />
 
       {/* ── HEADER ── */}
-      {!chatOpen && (
-        <header className="arav-header" role="banner">
+      <header className="arav-header" role="banner">
           <div className="arav-header__inner">
           <div className="arav-header__brand">
             <img src="/images/logo.png" alt="Arav AI" className="arav-header__logo" width="56" height="56" />
@@ -204,7 +211,6 @@ export default function Welcome({ onStart }) {
           </div>
         </div>
       </header>
-      )}
 
       {/* ── HERO ── */}
       <main className="arav-main">
@@ -240,7 +246,7 @@ export default function Welcome({ onStart }) {
                   <span className="arav-mic-ring arav-mic-ring--2" />
                   <span className="arav-mic-ring arav-mic-ring--3" />
                 </div>
-                <button className="arav-mic-btn" onClick={() => openChat()} aria-label="Press to Speak" type="button">
+                <button className="arav-mic-btn" onClick={() => openChat('', true)} aria-label="Press to Speak" type="button">
                   <Mic size={38} strokeWidth={2} />
                 </button>
                 <div className="arav-mic-label-wrapper">
@@ -283,7 +289,7 @@ export default function Welcome({ onStart }) {
 
       {/* ── CHAT OVERLAY (existing functionality preserved) ── */}
       {chatOpen && (
-        <div className="kiosk-chat-overlay" role="dialog" aria-modal="true" aria-label="Voice conversation">
+        <div className="kiosk-chat-overlay" role="dialog" aria-modal="false" aria-label="Voice conversation">
           <div className="kiosk-chat-overlay-topbar">
             <div className="arav-header__brand" style={{ gap: '8px' }}>
               <img src="/images/logo.png" alt="Arav AI" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'contain' }} />
@@ -296,13 +302,17 @@ export default function Welcome({ onStart }) {
               <button className="kiosk-overlay-btn" onClick={() => onStart(seed)} title="Open full screen">
                 <Maximize2 size={16} /><span>Full screen</span>
               </button>
-              <button className="kiosk-overlay-btn" onClick={() => { setChatOpen(false); setSeed(''); }} title="Close conversation">
+              <button className="kiosk-overlay-btn" onClick={closeChat} title="Close conversation">
                 <X size={16} /><span>Close</span>
               </button>
             </div>
           </div>
           <div className="kiosk-chat-overlay-body">
-            <ChatBox initialQuery={seed} onConversationState={handleConversationState} />
+            <ChatBox
+            initialQuery={seed}
+            onConversationState={handleConversationState}
+            autoListen={autoListen}
+          />
           </div>
           <EReportDock turns={turns} isLoading={chatBusy} userTag={userTag} />
         </div>
