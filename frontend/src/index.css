@@ -1610,3 +1610,235 @@ body {
   .kiosk-chat-topbar { padding: 8px 12px; }
   .kiosk-chat-title { font-size: 0.95rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Conversation window: governmental / official-services look.
+   Navy and brass on ivory, a serif for anything that reads as an official
+   heading, small-caps for labels, and hairline rules instead of soft
+   shadows. Classic rather than modern, and legible from a distance on a
+   kiosk where a citizen is standing up.
+   ═══════════════════════════════════════════════════════════════════════ */
+.kiosk-chat-overlay {
+  --gov-navy: #12305c;
+  --gov-navy-deep: #0b2340;
+  --gov-gold: #b08a2e;
+  --gov-gold-soft: #d8c288;
+  --gov-ivory: #fbf9f2;
+  --gov-parchment: #f4f0e4;
+  --gov-ink: #1c2733;
+  --gov-muted: #5d6a79;
+  --gov-rule: rgba(18, 48, 92, .22);
+  border: 1px solid var(--gov-navy);
+  border-top: 3px solid var(--gov-navy);
+  border-radius: 6px;
+  background: var(--gov-ivory);
+  box-shadow: 0 0 0 1px rgba(176, 138, 46, .38), 0 30px 70px rgba(11, 35, 64, .28);
+}
+.kiosk-chat-overlay::after {
+  /* hairline inner rule, the way a printed form is boxed */
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid rgba(176, 138, 46, .30);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+.kiosk-chat-overlay-topbar {
+  border-bottom: 1px solid var(--gov-rule);
+  background: linear-gradient(180deg, #ffffff 0%, var(--gov-parchment) 100%);
+  box-shadow: inset 0 -2px 0 rgba(176, 138, 46, .32);
+}
+.kiosk-chat-overlay-topbar strong {
+  font-family: Georgia, 'Times New Roman', 'Noto Serif', serif !important;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: 13px !important;
+  color: var(--gov-navy-deep) !important;
+}
+.kiosk-chat-overlay-topbar span {
+  font-size: 10px !important;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: var(--gov-muted) !important;
+}
+
+.kiosk-overlay-btn {
+  border: 1px solid var(--gov-rule) !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  color: var(--gov-navy) !important;
+  font-family: Georgia, 'Times New Roman', serif;
+  letter-spacing: .04em;
+  box-shadow: 0 1px 0 rgba(176, 138, 46, .3);
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.kiosk-overlay-btn:hover {
+  background: var(--gov-navy) !important;
+  border-color: var(--gov-navy-deep) !important;
+  color: #fff !important;
+}
+
+.kiosk-chat-overlay-body .chat-container {
+  border: 1px solid var(--gov-rule);
+  border-radius: 4px;
+  background: var(--gov-parchment);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6);
+}
+.kiosk-chat-overlay .chat-messages {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 140px),
+    var(--gov-parchment);
+  gap: 14px;
+}
+
+/* Assistant: ivory sheet with a navy rule down the leading edge, the way a
+   reply on official paper is set off from the question. */
+.chat-bubble-ai {
+  background: var(--gov-ivory) !important;
+  color: var(--gov-ink) !important;
+  border: 1px solid var(--gov-rule);
+  border-left: 3px solid var(--gov-navy);
+  border-radius: 3px !important;
+  font-family: Georgia, 'Times New Roman', 'Noto Serif', serif;
+  line-height: 1.62;
+  box-shadow: 0 1px 2px rgba(11, 35, 64, .07);
+}
+/* Citizen: navy card, cream type. */
+.chat-bubble-user {
+  background: var(--gov-navy) !important;
+  color: #f4f1e6 !important;
+  border: 1px solid var(--gov-navy-deep);
+  border-radius: 3px !important;
+  box-shadow: 0 1px 2px rgba(11, 35, 64, .18);
+}
+
+.chat-avatar-ai {
+  background: var(--gov-ivory) !important;
+  color: var(--gov-navy) !important;
+  border: 1px solid var(--gov-gold) !important;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(176, 138, 46, .22);
+}
+.chat-avatar-user {
+  background: var(--gov-navy-deep) !important;
+  color: #fff !important;
+  border: 1px solid var(--gov-gold) !important;
+  border-radius: 50%;
+}
+.chat-avatar-busy {
+  animation: govSealPulse 1.5s ease-in-out infinite;
+}
+@keyframes govSealPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(176, 138, 46, .22); opacity: .72; }
+  50% { box-shadow: 0 0 0 5px rgba(176, 138, 46, .10); opacity: 1; }
+}
+
+.chat-domain-pill {
+  border: 1px solid var(--gov-gold-soft, #d8c288) !important;
+  background: #fff !important;
+  color: var(--gov-navy) !important;
+  border-radius: 2px !important;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 700;
+}
+.transcript-label {
+  color: var(--gov-muted) !important;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.kiosk-chat-overlay .chat-input-bar {
+  background: #fff !important;
+  border-top: 1px solid var(--gov-rule) !important;
+  box-shadow: inset 0 1px 0 rgba(176, 138, 46, .22);
+}
+.kiosk-chat-overlay .chat-text-input {
+  border: 1px solid var(--gov-rule) !important;
+  border-radius: 3px !important;
+  background: #fff !important;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.kiosk-chat-overlay .chat-text-input:focus {
+  outline: none;
+  border-color: var(--gov-navy) !important;
+  box-shadow: 0 0 0 2px rgba(18, 48, 92, .16);
+}
+.kiosk-chat-overlay .chat-send-btn,
+.kiosk-chat-overlay .kiosk-btn-primary {
+  background: var(--gov-navy) !important;
+  border: 1px solid var(--gov-navy-deep) !important;
+  border-radius: 3px !important;
+  color: #fff !important;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .18);
+}
+.kiosk-chat-overlay .voice-btn {
+  background: var(--gov-navy) !important;
+  border: 1px solid var(--gov-navy-deep) !important;
+  box-shadow: 0 0 0 2px rgba(176, 138, 46, .28);
+}
+
+/* The silent transition: three soft bars breathing in and out, with no
+   caption and no bouncing dots, so the wait is not announced. */
+.thinking-pulse {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px 15px;
+  min-width: 190px;
+  border: 1px solid var(--gov-rule);
+  border-left: 3px solid var(--gov-navy);
+  border-radius: 3px;
+  background: var(--gov-ivory);
+}
+.thinking-pulse__bar {
+  display: block;
+  height: 7px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(18, 48, 92, .16) 0%, rgba(18, 48, 92, .40) 45%, rgba(18, 48, 92, .16) 90%);
+  background-size: 220% 100%;
+  animation: govBreathe 1.9s ease-in-out infinite;
+}
+.thinking-pulse__bar:nth-child(1) { width: 92%; }
+.thinking-pulse__bar:nth-child(2) { width: 74%; animation-delay: .18s; }
+.thinking-pulse__bar:nth-child(3) { width: 52%; animation-delay: .36s; }
+@keyframes govBreathe {
+  0%, 100% { background-position: 100% 0; opacity: .55; }
+  50% { background-position: 0% 0; opacity: 1; }
+}
+
+/* Placeholder inside the answer bubble while the voice is being fetched. Same
+   breathing rhythm, so the eye reads it as the answer forming rather than as a
+   spinner. */
+.answer-pending {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0;
+}
+.answer-pending__line {
+  display: block;
+  height: 9px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, rgba(18, 48, 92, .10) 0%, rgba(18, 48, 92, .30) 45%, rgba(18, 48, 92, .10) 90%);
+  background-size: 220% 100%;
+  animation: govBreathe 1.9s ease-in-out infinite;
+}
+.answer-pending__line:nth-child(1) { width: 94%; }
+.answer-pending__line:nth-child(2) { width: 80%; animation-delay: .2s; }
+.answer-pending__line:nth-child(3) { width: 46%; animation-delay: .4s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .thinking-pulse__bar, .answer-pending__line, .chat-avatar-busy { animation: none; }
+  .thinking-pulse__bar, .answer-pending__line { opacity: .6; }
+}
+
+/* While the voice is reading the answer out, the words are shown as plain text
+   so a half-spoken line can never render as broken markdown. The formatted
+   version takes over on the final word. */
+.reveal-partial {
+  white-space: pre-wrap;
+}

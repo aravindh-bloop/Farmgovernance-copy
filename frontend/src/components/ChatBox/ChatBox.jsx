@@ -30,6 +30,11 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
   const [audioState, setAudioState] = useState({ messageId: null, status: 'idle' });
   const currentAudioRef = useRef(null);
   const audioUnlockedRef = useRef(false);
+  // The answer is held back until the voice is ready, then revealed word by word
+  // in step with the speech. The citizen reads along instead of watching a
+  // finished paragraph appear before anyone has said a word.
+  const [revealed, setRevealed] = useState({});
+  const revealTimerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const sliderRef = useRef(null);
   const voiceInputRef = useRef(null);
@@ -165,6 +170,95 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
     return language || 'en';
   };
 
+  // Progress a message from "no words shown" to "every word shown" across the
+  // lifetime of its speech. getProgress returns 0..1 and is driven by the audio
+  // clock, or by a timer when we only have the Web Speech fallback.
+  // Never let the placeholder flash past in a single frame.
+  const REVEAL_FLOOR_MS = 280;
+  const revealStartedRef = useRef({});
+
+  const setRevealFloor = (messageId) => {
+    revealStartedRef.current[messageId] = Date.now();
+  };
+
+  const beginReveal = (messageId, text, getProgress, estimatedSeconds) => {
+    const total = text.split(' ').length;
+    if (!total) return;
+    const startedAt = Date.now();
+    // Claim the message at zero words straight away, otherwise the render that
+    // flips voiceReady to true lands before the first animation frame and the
+    // entire answer flashes on screen for a single frame.
+    setRevealed((prev) => (prev[messageId] === 0 ? prev : { ...prev, [messageId]: 0 }));
+    // If the audio clock stops advancing - a stalled or buffering stream happens
+    // on kiosk browsers with poor networks - the words would freeze on screen
+    // forever while the voice is still meant to be reading. After STALL_MS
+    // without progress, fall back to a wall-clock estimate, and resync to the
+    // real clock as soon as it starts moving again.
+    const STALL_MS = 1200;
+    let lastProgress = 0;
+    let lastAdvance = 0;
+    const tick = () => {
+      // Only throttle during the first REVEAL_FLOOR_MS, so a quick answer cannot
+      // snap open, and a long one still tracks the voice afterwards.
+      const elapsed = Date.now() - startedAt;
+      const cap = elapsed < REVEAL_FLOOR_MS ? elapsed / REVEAL_FLOOR_MS : 1;
+      let progress = getProgress();
+      if (progress > lastProgress + 0.0005) {
+        lastProgress = progress;
+        lastAdvance = elapsed;
+      } else if (elapsed - lastAdvance > STALL_MS && estimatedSeconds > 0) {
+        progress = Math.max(progress, elapsed / (estimatedSeconds * 1000));
+        lastProgress = progress;
+        lastAdvance = elapsed;
+      }
+      const ratio = Math.max(0, Math.min(1, Math.min(progress, cap)));
+      const count = ratio >= 1 ? total : Math.min(total, Math.max(1, Math.ceil(ratio * total)));
+      setRevealed((prev) => (prev[messageId] === count ? prev : { ...prev, [messageId]: count }));
+      if (ratio < 1) return;
+      clearInterval(revealTimerRef.current);
+      revealTimerRef.current = null;
+    };
+    if (revealTimerRef.current) clearInterval(revealTimerRef.current);
+    revealTimerRef.current = setInterval(tick, 60);
+  };
+
+  const finishReveal = (messageId, text) => {
+    if (revealTimerRef.current) {
+      clearInterval(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
+    setRevealed((prev) => ({ ...prev, [messageId]: text.split(' ').length }));
+  };
+
+  // Held-back text: only the words the voice has actually spoken so far.
+  const isStillBeingSpoken = (message) => {
+    const shown = revealed[message.id];
+    return shown !== undefined && shown < message.text.split(' ').length;
+  };
+
+  const visibleTextFor = (message) => {
+    const shown = revealed[message.id];
+    if (shown === undefined) return message.text;
+    if (shown >= message.text.split(' ').length) return message.text;
+    return message.text.split(' ').slice(0, shown).join(' ');
+  };
+
+  // How much of the answer the voice has actually spoken, as 0..1.
+  // Prefers the real audio clock; falls back to elapsed time against an
+  // estimated speaking length when the duration is not known yet.
+  const estimateSpeakSeconds = (text) => Math.max(2, text.split(' ').length / 2.6);
+
+  const revealProgressFor = (audioEl, text) => {
+    const estimate = estimateSpeakSeconds(text);
+    if (!audioEl) return 0;
+    const t = audioEl.currentTime || 0;
+    if (Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
+      return Math.min(1, t / audioEl.duration);
+    }
+    if (t > 0) return Math.min(1, t / estimate);
+    return 0;
+  };
+
   const playAssistantSpeech = async (messageId, text, langCode) => {
     stopCurrentAudio();
     if (!text) return;
@@ -200,7 +294,14 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
         audio.playbackRate = 1.0;
         currentAudioRef.current = audio;
 
-        audio.onplay = () => setAudioState({ messageId, status: 'playing' });
+        audio.onplay = () => {
+          setAudioState({ messageId, status: 'playing' });
+          setMessages((prev) =>
+            prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+          );
+          setRevealFloor(messageId);
+          beginReveal(messageId, text, () => revealProgressFor(audio, text), estimateSpeakSeconds(text));
+        };
         audio.onpause = () => {
           if (audio.currentTime < audio.duration) {
             setAudioState({ messageId, status: 'paused' });
@@ -209,8 +310,12 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
         audio.onended = () => {
           setAudioState({ messageId: null, status: 'idle' });
           currentAudioRef.current = null;
+          finishReveal(messageId, text);
         };
         audio.onerror = () => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+          );
           fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
         };
 
@@ -219,6 +324,9 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
           return;
         } catch (playErr) {
           console.warn('Audio play failed, falling back to Web Speech:', playErr);
+          setMessages((prev) =>
+            prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+          );
           fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
           return;
         }
@@ -278,6 +386,10 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
   const fallbackSpeechSynthesis = (messageId, text, langCode) => {
     if (!('speechSynthesis' in window)) {
       markVoiceUnavailable(messageId, 'browser has no speechSynthesis');
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+      );
+      finishReveal(messageId, text);
       return;
     }
     window.speechSynthesis.cancel();
@@ -317,12 +429,31 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
     utterance.rate = 0.95;
     utterance.pitch = 1.0;
 
-    utterance.onstart = () => setAudioState({ messageId, status: 'playing' });
-    utterance.onend = () => setAudioState({ messageId: null, status: 'idle' });
+    const speakSeconds = Math.max(2, (cleanText.split(' ').length / 2.6));
+    const startedAt = { t: 0 };
+
+    utterance.onstart = () => {
+      setAudioState({ messageId, status: 'playing' });
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+      );
+      startedAt.t = Date.now();
+      beginReveal(messageId, text, () => Math.min(1, (Date.now() - startedAt.t) / (speakSeconds * 1000)), speakSeconds);
+    };
+    utterance.onend = () => {
+      setAudioState({ messageId: null, status: 'idle' });
+      finishReveal(messageId, text);
+    };
     utterance.onerror = (e) => {
       // 'not-allowed' means autoplay was blocked; anything else means the
       // system voice itself failed. Either way the user needs to see it.
       markVoiceUnavailable(messageId, `speechSynthesis error: ${e?.error || 'unknown'}`);
+      // Never leave the answer hidden behind a placeholder just because the
+      // voice failed: show all of it.
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+      );
+      finishReveal(messageId, text);
     };
 
     window.speechSynthesis.speak(utterance);
@@ -356,6 +487,7 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
         id: newMsgId,
         sender: 'ai',
         text: response.answer,
+        voiceReady: false,
         responseType: response.responseType || response.domain,
         officerRecommendation: response.recommended_officer || response.officerRecommendation,
         citations: response.citations || [],
@@ -617,10 +749,27 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
                     </div>
                   )}
 
-                  {isUser ? msg.text : <ReactMarkdown remarkPlugins={[remarkGfm]}>{formatStepsLineByLine(msg.text)}</ReactMarkdown>}
+                  {!isUser && msg.voiceReady === false ? (
+                    /* Voice not ready yet. The words would spoil the silence and
+                       arrive before anyone has spoken, so hold a quiet
+                       placeholder shaped like the answer instead. */
+                    <div className="answer-pending">
+                      <span className="answer-pending__line" />
+                      <span className="answer-pending__line" />
+                      <span className="answer-pending__line" />
+                    </div>
+                  ) : isUser ? (
+                    msg.text
+                  ) : isStillBeingSpoken(msg) ? (
+                    <span className="reveal-partial">{visibleTextFor(msg)}</span>
+                  ) : (
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {formatStepsLineByLine(visibleTextFor(msg))}
+                    </ReactMarkdown>
+                  )}
 
                   {/* Verified Statutory Citations */}
-                  {!isUser && msg.citations && msg.citations.length > 0 && (
+                  {!isUser && msg.voiceReady !== false && msg.citations && msg.citations.length > 0 && (
                     <div className="chat-citations-card">
                       <div className="chat-citations-title">
                         <span>🏛️ Official Sources & Statutory Citations:</span>
@@ -687,14 +836,13 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
 
         {isLoading && (
           <div className="chat-row chat-row-ai">
-            <div className="chat-avatar chat-avatar-ai">
+            <div className="chat-avatar chat-avatar-ai chat-avatar-busy">
               <Bot size={16} />
             </div>
-            <div className="typing-indicator">
-              <span className="typing-dot" />
-              <span className="typing-dot" />
-              <span className="typing-dot" />
-              <span className="typing-text">{t('assistantTyping')}</span>
+            <div className="thinking-pulse" role="status" aria-label="Preparing a reply">
+              <span className="thinking-pulse__bar" />
+              <span className="thinking-pulse__bar" />
+              <span className="thinking-pulse__bar" />
             </div>
           </div>
         )}
