@@ -2,14 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import LanguageSelection from './pages/LanguageSelection/LanguageSelection';
 import Welcome from './pages/Welcome/Welcome';
-import Chat from './pages/Chat/Chat';
 import { Sun, Moon } from 'lucide-react';
 import IdleScreen from './components/IdleScreen/IdleScreen';
 
 const SCREENS = {
   LANGUAGE: 'language',
   WELCOME: 'welcome',
-  CHAT: 'chat',
 };
 
 // 3 minutes in milliseconds
@@ -87,12 +85,6 @@ function AppContent() {
   };
 
   const handleLanguageComplete = () => setScreen(SCREENS.WELCOME);
-  const handleStartChat = (initialQuery = '') => setScreen({ screen: SCREENS.CHAT, initialQuery });
-  const handleChangeLanguage = () => {
-    clearLanguage();
-    setScreen(SCREENS.LANGUAGE);
-  };
-
   // The kiosk portal has its own fixed light palette, so the theme switch does
   // nothing there and used to sit on top of the user tag and language pill.
   const onKioskPortal = screen === SCREENS.WELCOME;
@@ -138,12 +130,7 @@ function AppContent() {
       {screen === SCREENS.LANGUAGE && (
         <LanguageSelection onComplete={handleLanguageComplete} />
       )}
-      {screen === SCREENS.WELCOME && (
-        <Welcome onStart={handleStartChat} />
-      )}
-      {screen.screen === SCREENS.CHAT && (
-        <Chat initialQuery={screen.initialQuery} onChangeLanguage={handleChangeLanguage} />
-      )}
+      {screen === SCREENS.WELCOME && <Welcome />}
 
       <footer className="app-footer">
         Smart India Hackathon 2026 • Team Synacle (PS ID: SIH26088)

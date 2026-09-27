@@ -1842,3 +1842,74 @@ body {
 .reveal-partial {
   white-space: pre-wrap;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Full screen: the same window, grown to the whole screen.
+   It is a mode of the conversation panel rather than a separate page, so the
+   window keeps its governmental dress, the conversation is never interrupted,
+   and there is always a way back.
+   ═══════════════════════════════════════════════════════════════════════ */
+.kiosk-chat-overlay--fullscreen {
+  left: 0;
+  top: 0;
+  transform: none;
+  width: 100vw;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100dvh;
+  border: 0;
+  border-top: 4px solid var(--gov-navy);
+  border-radius: 0;
+  box-shadow: none;
+  animation: govFullScreenIn .24s cubic-bezier(.22, 1, .36, 1);
+}
+.kiosk-chat-overlay--fullscreen::after {
+  /* the printed-form hairline, kept but pushed out of the way of the edges */
+  inset: 10px;
+}
+/* Collapse back to the centred window rather than snapping. */
+.kiosk-chat-overlay {
+  transition: left .24s cubic-bezier(.22, 1, .36, 1), top .24s cubic-bezier(.22, 1, .36, 1),
+    width .24s cubic-bezier(.22, 1, .36, 1), height .24s cubic-bezier(.22, 1, .36, 1),
+    border-radius .24s cubic-bezier(.22, 1, .36, 1);
+}
+@keyframes govFullScreenIn {
+  from { opacity: .4; }
+  to { opacity: 1; }
+}
+.kiosk-chat-overlay--fullscreen .kiosk-chat-overlay-topbar {
+  padding: clamp(12px, 2vh, 22px) clamp(16px, 3vw, 40px);
+}
+.kiosk-chat-overlay--fullscreen .kiosk-chat-overlay-body {
+  padding: clamp(10px, 2vh, 26px) clamp(10px, 3vw, 40px) clamp(12px, 2vh, 26px);
+}
+/* Keep the column of text readable on a wide kiosk instead of letting each
+   line run the full width of a 4K panel. */
+.kiosk-chat-overlay--fullscreen .kiosk-chat-overlay-body .chat-container {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.kiosk-chat-overlay--fullscreen .chat-bubble-ai,
+.kiosk-chat-overlay--fullscreen .chat-bubble-user {
+  max-width: 92%;
+}
+/* Nothing may spill past the edges when the window is the whole screen. */
+.kiosk-chat-overlay--fullscreen .kiosk-chat-overlay-body .chat-messages {
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* On a phone the window's buttons collapse to icons to save room, which is
+   fine for Close but leaves the way out of full screen unexplained. Keep the
+   Back label, and give every bare icon a proper touch target. */
+.kiosk-chat-overlay--fullscreen .kiosk-overlay-btn:first-child span {
+  display: inline;
+}
+.kiosk-chat-overlay--fullscreen .kiosk-overlay-btn {
+  padding: 10px 12px;
+  min-height: 44px;
+}
+@media (max-width: 520px) {
+  .kiosk-chat-overlay--fullscreen .kiosk-overlay-btn { padding: 10px; min-height: 44px; }
+  .kiosk-chat-overlay--fullscreen .kiosk-overlay-btn span { font-size: 11px; }
+}

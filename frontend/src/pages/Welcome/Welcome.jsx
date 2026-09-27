@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Globe,
   MapPin,
@@ -7,6 +7,8 @@ import {
   Volume2,
   ChevronRight,
   Maximize2,
+  Minimize2,
+  ArrowLeft,
   X,
 } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
@@ -108,7 +110,7 @@ function useUserTag() {
 /* ════════════════════════════════════════════════════════════════════
    Welcome / Home Page Component
    ════════════════════════════════════════════════════════════════════ */
-export default function Welcome({ onStart }) {
+export default function Welcome() {
   const { language, setLanguage } = useLanguage();
   const userTag = useUserTag();
   const bubble = SPEECH_BUBBLE_TEXT[language] || SPEECH_BUBBLE_TEXT.en;
@@ -139,6 +141,7 @@ export default function Welcome({ onStart }) {
 
   // Chat overlay state (existing functionality preserved)
   const [chatOpen, setChatOpen] = useState(false);
+  const [chatFullscreen, setChatFullscreen] = useState(false);
   const [seed, setSeed] = useState('');
   const [autoListen, setAutoListen] = useState(false);
   const [turns, setTurns] = useState([]);
@@ -153,13 +156,25 @@ export default function Welcome({ onStart }) {
     setSeed(initialQuery);
     setAutoListen(listen);
     setChatOpen(true);
+    setChatFullscreen(false);
   };
 
   const closeChat = () => {
     setChatOpen(false);
+    setChatFullscreen(false);
     setSeed('');
     setAutoListen(false);
   };
+
+  // Escape leaves full screen, so a citizen is never trapped in it.
+  useEffect(() => {
+    if (!chatFullscreen) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') setChatFullscreen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [chatFullscreen]);
 
   return (
     <div className="arav-home">
@@ -289,7 +304,12 @@ export default function Welcome({ onStart }) {
 
       {/* ── CHAT OVERLAY (existing functionality preserved) ── */}
       {chatOpen && (
-        <div className="kiosk-chat-overlay" role="dialog" aria-modal="false" aria-label="Voice conversation">
+        <div
+          className={`kiosk-chat-overlay ${chatFullscreen ? 'kiosk-chat-overlay--fullscreen' : ''}`}
+          role="dialog"
+          aria-modal="false"
+          aria-label="Voice conversation"
+        >
           <div className="kiosk-chat-overlay-topbar">
             <div className="arav-header__brand" style={{ gap: '8px' }}>
               <img src="/images/logo.png" alt="Arav AI" style={{ width: 28, height: 28, borderRadius: 6, objectFit: 'contain' }} />
@@ -299,9 +319,32 @@ export default function Welcome({ onStart }) {
               </div>
             </div>
             <div className="kiosk-chat-overlay-actions">
-              <button className="kiosk-overlay-btn" onClick={() => onStart(seed)} title="Open full screen">
-                <Maximize2 size={16} /><span>Full screen</span>
-              </button>
+              {chatFullscreen ? (
+                <>
+                  <button
+                    className="kiosk-overlay-btn"
+                    onClick={() => setChatFullscreen(false)}
+                    title="Back to the conversation window"
+                  >
+                    <ArrowLeft size={16} /><span>Back</span>
+                  </button>
+                  <button
+                    className="kiosk-overlay-btn"
+                    onClick={() => setChatFullscreen((v) => !v)}
+                    title="Leave full screen"
+                  >
+                    <Minimize2 size={16} /><span>Exit full screen</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="kiosk-overlay-btn"
+                  onClick={() => setChatFullscreen(true)}
+                  title="Use the whole screen"
+                >
+                  <Maximize2 size={16} /><span>Full screen</span>
+                </button>
+              )}
               <button className="kiosk-overlay-btn" onClick={closeChat} title="Close conversation">
                 <X size={16} /><span>Close</span>
               </button>
