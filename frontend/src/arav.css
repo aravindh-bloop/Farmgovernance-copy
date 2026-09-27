@@ -106,11 +106,12 @@
 
 /* ── Main ── */
 .arav-main { position: relative; z-index: 2; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.arav-hero { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; justify-content: center; }
 
 /* ── Hero ── */
 .arav-hero { padding: 0 1.5rem; max-width: 1500px; margin: 0 auto; width: 100%; position: relative; z-index: 2; }
 .arav-hero__layout {
-  display: flex; align-items: center; justify-content: center; height: clamp(190px, 42dvh, 560px); min-height: 0;
+  display: flex; align-items: center; justify-content: center; flex: 1 1 auto; height: auto; min-height: 0;
   position: relative;
 }
 
@@ -174,14 +175,14 @@
 .arav-hero__hint { font-size: 0.82rem; color: #64748b; line-height: 1.5; }
 
 /* ── Mic CTA ── */
-.arav-mic-cta { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: clamp(0.3rem, 1.6dvh, 2rem); position: relative; width: clamp(104px, 22dvh, 200px); height: clamp(104px, 22dvh, 200px); }
-.arav-mic-rings { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: clamp(99px, 21dvh, 190px); height: clamp(99px, 21dvh, 190px); pointer-events: none; z-index: 1; }
+.arav-mic-cta { display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: clamp(0.3rem, 1.6dvh, 2rem); position: relative; width: clamp(88px, 22dvh, 200px); height: clamp(88px, 22dvh, 200px); }
+.arav-mic-rings { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: clamp(84px, 21dvh, 190px); height: clamp(84px, 21dvh, 190px); pointer-events: none; z-index: 1; }
 .arav-mic-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(9,117,63,0.25); animation: aravRingPulse 3s ease-in-out infinite; }
 .arav-mic-ring--2 { inset: -20px; animation-delay: 0.5s; border-color: rgba(9,117,63,0.15); }
 .arav-mic-ring--3 { inset: -40px; animation-delay: 1s; border-color: rgba(9,117,63,0.08); }
 @keyframes aravRingPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.5; } }
 .arav-mic-btn {
-  position: relative; z-index: 3; width: clamp(68px, 14dvh, 130px); height: clamp(68px, 14dvh, 130px); border-radius: 50%; border: none;
+  position: relative; z-index: 3; width: clamp(58px, 14dvh, 130px); height: clamp(58px, 14dvh, 130px); border-radius: 50%; border: none;
   background: #09753F; color: #fff; cursor: pointer;
   display: flex; align-items: center; justify-content: center; font-family: inherit;
   box-shadow: 0 16px 40px rgba(9,117,63,0.5), inset 0 2px 0 rgba(255,255,255,0.2);
@@ -211,7 +212,7 @@
   box-shadow: 0 24px 60px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.4) inset;
   padding: 1rem 1.25rem 0.5rem; /* Even smaller padding */
   max-width: 1700px;
-  margin: clamp(6px, 1.4dvh, 20px) auto clamp(6px, 1.8dvh, 3rem);
+  margin: auto auto clamp(6px, 1.8dvh, 3rem);
   flex-shrink: 0;
   width: calc(100% - 2rem);
 }
