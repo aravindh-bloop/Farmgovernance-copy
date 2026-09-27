@@ -52,16 +52,35 @@ export async function sendVoiceQuery(audioBlob, language = 'en', transcript = ''
 
 const _kioskAudioCache = new Map();
 
+// A dead TTS provider must not be re-probed on every question. Once it has
+// failed twice we stop asking and let the browser voice read the answer, so a
+// provider that is down costs one second on the first question and nothing
+// on the rest of the session.
+let _ttsConsecutiveFailures = 0;
+const TTS_FAILURE_LIMIT = 2;
+export function isTTSDisabled() {
+  return _ttsConsecutiveFailures >= TTS_FAILURE_LIMIT;
+}
+
 /**
  * Fetch Text-to-Speech audio from the backend TTS engine.
  * Features client-side in-memory caching and a generous timeout, because a
  * Render free-tier cold start can take far longer than the request itself.
+ *
+ * Throws when the provider refuses the request, so the caller can tell a
+ * refusal apart from a piece that has not arrived yet. That distinction is
+ * what stops a dead provider costing thirty seconds of silence.
+ *
  * @param {string} text - The text to synthesize
  * @param {string} language - The language code (e.g. 'hi', 'ta', 'en', 'ml', 'te')
- * @returns {Promise<string|null>} Object URL pointing to the audio stream, or null
+ * @returns {Promise<string>} Object URL pointing to the audio stream
  */
 export async function fetchTTSAudio(text, language = 'en') {
   if (!text || !text.trim()) return null;
+  // Refuse outright once the provider is known to be down. Returning null here
+  // would look like "still coming" and every later question would sit out the
+  // full wait before falling back.
+  if (isTTSDisabled()) throw new Error('TTS unavailable after repeated failures');
   // Key on the whole text. Keying on a prefix let two different replies that
   // open the same way share one another's audio once the answer is chunked.
   const cacheKey = `${language}:${text.trim()}`;
@@ -86,13 +105,21 @@ export async function fetchTTSAudio(text, language = 'en') {
       const blob = await res.blob();
       const objUrl = URL.createObjectURL(blob);
       _kioskAudioCache.set(cacheKey, objUrl);
+      _ttsConsecutiveFailures = 0;
       return objUrl;
     }
+    // Report the refusal to the caller instead of returning null. A silent null
+    // is indistinguishable from "not ready yet", which made the player wait on
+    // every piece before it gave up - the difference between a 2 second answer
+    // and a 30 second one when the provider is down.
+    const detail = await res.text().catch(() => '');
+    throw new Error(`TTS ${res.status}: ${detail.slice(0, 160)}`);
   } catch (err) {
     clearTimeout(timeoutId);
-    console.warn('Backend TTS request timed out or failed:', err);
+    _ttsConsecutiveFailures += 1;
+    console.warn('Backend TTS request failed:', err);
+    throw err;
   }
-  return null;
 }
 
 function normalizeBackendResponse(data) {

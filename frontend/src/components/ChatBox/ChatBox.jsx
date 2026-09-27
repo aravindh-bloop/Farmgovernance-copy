@@ -431,6 +431,7 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
     const run = {
       cancelled: false,
       paused: false,
+      failed: false,
       chunks,
       urls: new Array(chunks.length).fill(null),
       totalWords: countWords(text),
@@ -451,9 +452,11 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
       run.inFlight += 1;
       try {
         const url = await fetchTTSAudio(chunks[index], effectiveLang);
-        if (!run.cancelled) run.urls[index] = url;
+        if (url && !run.cancelled) run.urls[index] = url;
         return url;
       } catch {
+        // A refusal from the provider, not a piece that is still coming.
+        run.failed = true;
         return null;
       } finally {
         run.inFlight -= 1;
@@ -501,12 +504,15 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
           url = await fetchChunk(index);
           // Give the background fetcher a moment to catch up rather than
           // dropping straight into a silent gap.
-          if (!url) {
+          if (!url && !run.failed) {
+            // Only worth waiting if the background fetcher is genuinely still
+            // working on this piece. If the provider refused it, there is
+            // nothing to wait for.
             url = await new Promise((resolve) => {
               let waited = 0;
               const poll = setInterval(() => {
                 waited += 120;
-                if (run.cancelled || run.urls[index] || waited > 12000) {
+                if (run.cancelled || run.failed || run.urls[index] || waited > 12000) {
                   clearInterval(poll);
                   resolve(run.cancelled ? null : run.urls[index]);
                 }
@@ -516,9 +522,10 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
         }
         if (run.cancelled) { clearTimeout(guard); return; }
 
-        // A piece we could not fetch is skipped rather than allowed to stall
-        // the whole reply.
-        if (!url) continue;
+        // One refusal means the voice is not coming: stop asking and hand the
+        // reply to the browser voice straight away, rather than waiting again
+        // for every remaining piece.
+        if (!url) { fellBack = true; break; }
 
         const played = await new Promise((resolve) => {
           const audio = new Audio(url);
