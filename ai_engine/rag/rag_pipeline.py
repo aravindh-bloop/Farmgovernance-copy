@@ -14,6 +14,7 @@ from ai_engine.orchestration.domain_router import DomainRouter
 from ai_engine.rag.prompt_builder import PromptBuilder
 from ai_engine.llm.reasoner import LLMReasoner
 from ai_engine.resolution_navigator.procedure_generator import ProcedureGenerator
+from backend.app.services.speech_plan import build_speech_plan
 from ai_engine.language.language_detector import LanguageDetector
 from ai_engine.language.translation import TranslationEngine
 
@@ -135,6 +136,16 @@ class RAGPipeline:
         if any(w in query.lower() for w in ["complaint", "delay", "reject", "bribe", "refuse", "harass", "recover"]):
             procedure = self.procedure_gen.generate_for_query(query, docs)
 
+        # 6. Decide the spoken part of the reply and the question to ask next.
+        #    Done after the answer is final and language-aligned, so the voice
+        #    reads exactly what the citizen can see.
+        speech_plan = build_speech_plan(
+            answer=answer,
+            language=language,
+            procedure=procedure,
+            active_domains=active_domains,
+        )
+
         return {
             "query": query,
             "language": language,
@@ -152,5 +163,9 @@ class RAGPipeline:
             "source_authority": citations[0] if citations else None,
             "procedure": procedure,
             "extracted_slots": extracted_slots,
-            "authorities": authorities
+            "authorities": authorities,
+            "read_aloud": speech_plan["read_aloud"],
+            "read_aloud_is_full": speech_plan["read_aloud_is_full"],
+            "follow_up_kind": speech_plan["follow_up_kind"],
+            "detail_withheld": speech_plan["detail_withheld"],
         }

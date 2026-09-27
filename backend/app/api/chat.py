@@ -34,7 +34,7 @@ async def handle_chat_query(payload: ChatRequest):
 @router.post("/tts")
 async def handle_tts(payload: TTSRequest):
     try:
-        clean_text = clean_speech_text(payload.text, max_chars=220)
+        clean_text = clean_speech_text(payload.text, max_chars=600)
         target_lang = (payload.language or "en").strip()
 
         # Trust the language chosen by the frontend (this is what keeps Marathi

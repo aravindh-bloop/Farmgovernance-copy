@@ -21,6 +21,12 @@ export const TRANSLATIONS = {
     escalationStep: 'Escalation Step',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'Change Language',
+    followUpSteps: 'Would you like me to read out the step-by-step process?',
+    followUpEligibility: 'Would you like to know who is eligible?',
+    followUpDocuments: 'Would you like to know which documents are needed?',
+    followUpAmount: 'Would you like the amount and the last date?',
+    followUpContact: "Would you like the officer's contact details?",
+
   },
   hi: {
     appName: 'सहकारी एआई सहायक',
@@ -44,6 +50,12 @@ export const TRANSLATIONS = {
     escalationStep: 'शिकायत स्तर',
     footerText: 'स्मार्ट इंडिया हैकाथॉन 2026 • टीम BRAVITS',
     changeLanguage: 'भाषा बदलें',
+    followUpSteps: 'क्या आप चाहेंगे कि मैं चरण-दर-चरण प्रक्रिया पढ़कर सुनाऊं?',
+    followUpEligibility: 'क्या आप जानना चाहेंगे कि कौन पात्र है?',
+    followUpDocuments: 'क्या आप जानना चाहेंगे कि कौन से दस्तावेज़ चाहिए?',
+    followUpAmount: 'क्या आप राशि और अंतिम तिथि जानना चाहेंगे?',
+    followUpContact: 'क्या आप अधिकारी का संपर्क विवरण चाहेंगे?',
+
   },
   ta: {
     appName: 'கூட்டுறவு AI உதவியாளர்',
@@ -67,6 +79,12 @@ export const TRANSLATIONS = {
     escalationStep: 'புகார் நிலை',
     footerText: 'ஸ்மார்ட் இந்தியா ஹேக்கathons 2026 • Team BRAVITS',
     changeLanguage: 'மொழியை மாற்று',
+    followUpSteps: 'படிப்படியான செயல்முறையை வாசித்து கூற விரும்புகிறீர்களா?',
+    followUpEligibility: 'எல்லாவருக்கும் தகுதியுள்ளவர்கள் யார் என்பதை அறிய விரும்புகிறீர்களா?',
+    followUpDocuments: 'எந்த ஆவணங்கள் தேவை என்பதை அறிய விரும்புகிறீர்களா?',
+    followUpAmount: 'தொகை மற்றும் கடைசி தேதியை அறிய விரும்புகிறீர்களா?',
+    followUpContact: 'அதிகாரியின் தொடர்பு விவரங்களை விரும்புகிறீர்களா?',
+
   },
   mr: {
     appName: 'सहकारी AI सहाय्यक',
@@ -90,6 +108,12 @@ export const TRANSLATIONS = {
     escalationStep: 'तक्रार स्तर',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'भाषा बदला',
+    followUpSteps: 'तुम्हाला पद-दर-पद प्रक्रिया वाचून सांगायची आहे का?',
+    followUpEligibility: 'कोण पात्र आहे हे जाणून घ्यायचे आहे का?',
+    followUpDocuments: 'कोणत्या कागदपत्रे लागतात हे जाणून घ्यायचे आहे का?',
+    followUpAmount: 'रक्कम आणि शेवटची तारीख जाणून घ्यायची आहे का?',
+    followUpContact: 'अधिकाऱ्याचा संपर्क तपशील हवा आहे का?',
+
   },
   te: {
     appName: 'సహకార AI అసిస్టెంట్',
@@ -113,6 +137,12 @@ export const TRANSLATIONS = {
     escalationStep: 'ఫిర్యాదు దశ',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'భాష మార్చు',
+    followUpSteps: 'దశలవారీగా ప్రక్రియను చదివించాలనుకుంటున్నారా?',
+    followUpEligibility: 'ఎవరు అర్హులో తెలుసుకోవాలనుకుంటున్నారా?',
+    followUpDocuments: 'ఏ పత్రాలు అవసరమో తెలుసుకోవాలనుకుంటున్నారా?',
+    followUpAmount: 'మొత్తం మరియు చివరి తేదీ తెలుసుకోవాలనుకుంటున్నారా?',
+    followUpContact: 'అధికారి సంప్రక్ష వివరాలు కావాలా?',
+
   },
   kn: {
     appName: 'ಸಹಕಾರ AI ಸಹಾಯಕ',
@@ -136,6 +166,12 @@ export const TRANSLATIONS = {
     escalationStep: 'ದೂರು ಹಂತ',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'ಭಾಷೆ ಬದಲಾಯಿಸಿ',
+    followUpSteps: 'ಹಂತ ಹಂತವಾಗಿರುವ ಪ್ರಕ್ರಿಯೆಯನ್ನು ಓದಿ ಹೇಳಲು ಬಯಸುತ್ತೀರಾ?',
+    followUpEligibility: 'ಯಾರು ಅರ್ಹರು ಎಂದು ತಿಳಿಯಲು ಬಯಸುತ್ತೀರಾ?',
+    followUpDocuments: 'ಯಾವ ದಾಖಲೆಗಳು ಬೇಕು ಎಂದು ತಿಳಿಯಲು ಬಯಸುತ್ತೀರಾ?',
+    followUpAmount: 'ಒಟ್ಟ ಮೌಲ್ಯ ಮತ್ತು ಕೊನೆಯ ದಿನಾಂಕ ತಿಳಿಯಬೇ ಕಿ?',
+    followUpContact: 'ಅಧಿಕಾರಿಯ ಸಂಪರ್ಕ ವಿವರಗಳು ಬೇಕೇ?',
+
   },
   gu: {
     appName: 'સહકારી AI સહાયક',
@@ -159,6 +195,12 @@ export const TRANSLATIONS = {
     escalationStep: 'ફરિયાદ સ્તર',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'ભાષા બદલો',
+    followUpSteps: 'શરૂથી અંત સુધીની પ્રક્રિયા વાંચી સહાય કરવી હશે?',
+    followUpEligibility: 'કોણ પાત્ર છે તે જાણવું છે?',
+    followUpDocuments: 'કઈ દસ્તાવેજો જરૂરી છે તે જાણવું છે?',
+    followUpAmount: 'રકમ અને છેલ્લી તારીખ જાણવી છે?',
+    followUpContact: 'અધિકારીનો સંપર્ક વિગતો જોઈએ છે?',
+
   },
   bn: {
     appName: 'সমবায় AI সহায়ক',
@@ -182,6 +224,12 @@ export const TRANSLATIONS = {
     escalationStep: 'অভিযোগের ধাপ',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'ভাষা পরিবর্তন',
+    followUpSteps: 'ধাপে ধাপে পদ্ধতিটি পড়ে শোনাতে চান?',
+    followUpEligibility: 'কারা যোগ্য তা জানতে চান?',
+    followUpDocuments: 'কোন কাগজপত্র লাগবে তা জানতে চান?',
+    followUpAmount: 'পরিমাণ ও শেষ তারিখ জানতে চান?',
+    followUpContact: 'কর্মকর্তার যোগাযোগের তথ্য চান?',
+
   },
   ml: {
     appName: 'സഹകരണ AI സഹായി',
@@ -205,6 +253,12 @@ export const TRANSLATIONS = {
     escalationStep: 'പരാതി ഘട്ടം',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'ഭാഷ മാറ്റുക',
+    followUpSteps: 'വിശദമായ പ്രോസീഡർ വായിക്കാൻ ആഗ്രഹിക്കുമോ?',
+    followUpEligibility: 'ആരുമാണ് അർഹരാണ് എന്ന് അറിയണോ?',
+    followUpDocuments: 'ഏത് രേഖകൾ വേണോ എന്ന് അറിയണോ?',
+    followUpAmount: 'തുകയും അവസാന തീയതിയും അറിയണോ?',
+    followUpContact: 'ഉദ്യോഗസ്ഥന്റെ ബന്ധപ്പെടുന്ന വിവരങ്ങൾ വേണോ?',
+
   },
   pa: {
     appName: 'ਸਹਿਕਾਰੀ AI ਸਹਾਇਕ',
@@ -228,6 +282,12 @@ export const TRANSLATIONS = {
     escalationStep: 'ਸ਼ਿਕਾਇਤ ਪੱਧਰ',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'ਭਾਸ਼ਾ ਬਦਲੋ',
+    followUpSteps: 'ਕਦਮ-ਦਰ-ਕਦਮ ਪ੍ਰਕਿਰਿਆ ਪੜ੍ਹ ਕੇ ਸੁਣਾਉਣੀ ਹੈ?',
+    followUpEligibility: 'ਕੌਣ ਯੋਗ ਹੈ, ਇਹ ਜਾਣਨਾ ਹੈ?',
+    followUpDocuments: 'ਕਿਹੜੇ ਦਸਤਾਵੇਜ਼ ਚਾਹੀਦੇ ਹਨ, ਇਹ ਜਾਣਨਾ ਹੈ?',
+    followUpAmount: 'ਰਕਮ ਅਤੇ ਆਖਰੀ ਮਿਤੀ ਜਾਣਨੀ ਹੈ?',
+    followUpContact: 'ਅਧਿਕਾਰੀ ਦਾ ਸੰਪਰਕ ਵੇਰਵਾ ਚਾਹੀਦਾ ਹੈ?',
+
   },
   or: {
     appName: 'ସମବାୟ AI ସହାୟକ',
@@ -251,5 +311,11 @@ export const TRANSLATIONS = {
     escalationStep: 'ଅଭିଯୋଗ ପଦକ୍ଷେପ',
     footerText: 'Smart India Hackathon 2026 • Team BRAVITS',
     changeLanguage: 'ଭାଷା ବଦଳାନ୍ତୁ',
+    followUpSteps: 'ଧାପ ଦ୍ୱାରା ପ୍ରକ୍ରିୟା ପଢ଼ି ଶୁଣାଇବେ କି?',
+    followUpEligibility: 'କେଉଁଠି ଅର୍ହ ଜାଣିବେ କି?',
+    followUpDocuments: 'କେଉଁ ଦସ୍ତାବେଜୁ ବେକା ଜାଣିବେ କି?',
+    followUpAmount: 'ହଣକାସୁ ମତ୍ତ କ୊ନେଯ ଦିନାଂକ ତିଳିବେ କି?',
+    followUpContact: 'ଅଧିକାରୀର ସମ୍ପର୍କ ବିବରଣୀ ବେକା?',
+
   },
 };

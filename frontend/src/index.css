@@ -1913,3 +1913,28 @@ body {
   .kiosk-chat-overlay--fullscreen .kiosk-overlay-btn { padding: 10px; min-height: 44px; }
   .kiosk-chat-overlay--fullscreen .kiosk-overlay-btn span { font-size: 11px; }
 }
+
+/* The next question, offered as something the citizen can simply accept. */
+.chat-followup {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 14px;
+  border: 1px solid var(--gov-navy, #12305c);
+  border-left: 3px solid var(--gov-gold, #b08a2e);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--gov-navy, #12305c);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease;
+}
+.chat-followup:hover {
+  background: var(--gov-navy, #12305c);
+  color: #fff;
+}
+.chat-followup svg { flex: 0 0 auto; }

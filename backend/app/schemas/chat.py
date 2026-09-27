@@ -41,6 +41,12 @@ class ChatResponse(BaseModel):
     recommended_officer: Optional[Dict[str, Any]] = None
     procedure: Optional[Dict[str, Any]] = None
     authorities: Optional[List[Dict[str, Any]]] = None
+    # What the voice should actually read, and the question to ask next. The
+    # answer itself stays complete on screen; this only governs the speech.
+    read_aloud: Optional[str] = None
+    read_aloud_is_full: Optional[bool] = True
+    follow_up_kind: Optional[str] = None
+    detail_withheld: Optional[bool] = False
 
 class GrievanceSubmission(BaseModel):
     applicant_name: str

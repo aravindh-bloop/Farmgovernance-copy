@@ -62,7 +62,9 @@ const _kioskAudioCache = new Map();
  */
 export async function fetchTTSAudio(text, language = 'en') {
   if (!text || !text.trim()) return null;
-  const cacheKey = `${language}:${text.slice(0, 150).trim()}`;
+  // Key on the whole text. Keying on a prefix let two different replies that
+  // open the same way share one another's audio once the answer is chunked.
+  const cacheKey = `${language}:${text.trim()}`;
   if (_kioskAudioCache.has(cacheKey)) {
     return _kioskAudioCache.get(cacheKey);
   }
@@ -106,7 +108,12 @@ function normalizeBackendResponse(data) {
     verifiedFacts: data.verified_facts || [],
     sourceAuthority: data.source_authority || 'Ministry of Cooperation Verified Database',
     procedure: data.procedure || null,
-    authorities: data.authorities || []
+    authorities: data.authorities || [],
+    // Without these the voice would fall back to reading the whole answer.
+    read_aloud: data.read_aloud || data.readAloud || '',
+    read_aloud_is_full: data.read_aloud_is_full ?? data.readAloudIsFull ?? true,
+    follow_up_kind: data.follow_up_kind || data.followUpKind || null,
+    detail_withheld: data.detail_withheld ?? data.detailWithheld ?? false
   };
 }
 

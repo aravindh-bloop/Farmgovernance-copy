@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Volume2, VolumeX, Pause, Play, Loader2, Globe, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Send, Bot, User, Volume2, VolumeX, Pause, Play, Loader2, Globe, ChevronLeft, ChevronRight, MessageCircleQuestion } from 'lucide-react';
 import { sendTextQuery, sendVoiceQuery, fetchTTSAudio } from '../../services/api';
 import { useLanguage } from '../../context/LanguageContext';
 import VoiceInput from '../VoiceInput/VoiceInput';
@@ -7,6 +7,16 @@ import OfficerRecommendationCard from '../OfficerRecommendationCard/OfficerRecom
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { formatStepsLineByLine } from '../../utils/formatSteps';
+
+// The backend picks what to ask next; the wording lives here so the question
+// reaches the citizen in the language they are reading.
+const FOLLOW_UP_KEYS = {
+  steps: 'followUpSteps',
+  eligibility: 'followUpEligibility',
+  documents: 'followUpDocuments',
+  amount: 'followUpAmount',
+  contact: 'followUpContact',
+};
 
 const SLIDING_LANGUAGES = [
   { code: 'en', name: 'English', native: 'English' },
@@ -29,11 +39,20 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
   const [isLoading, setIsLoading] = useState(false);
   const [audioState, setAudioState] = useState({ messageId: null, status: 'idle' });
   const currentAudioRef = useRef(null);
+  const speechRunRef = useRef(null);
   const audioUnlockedRef = useRef(false);
   // The answer is held back until the voice is ready, then revealed word by word
   // in step with the speech. The citizen reads along instead of watching a
   // finished paragraph appear before anyone has said a word.
   const [revealed, setRevealed] = useState({});
+  // Mirror of `revealed` so the reveal helpers can read the current word count
+  // without waiting for the next render.
+  const revealedRef = useRef({});
+  const setRevealCount = (messageId, count) => {
+    if (revealedRef.current[messageId] === count) return;
+    revealedRef.current = { ...revealedRef.current, [messageId]: count };
+    setRevealed(revealedRef.current);
+  };
   const revealTimerRef = useRef(null);
   const messagesEndRef = useRef(null);
   const sliderRef = useRef(null);
@@ -147,8 +166,19 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
   }, []);
 
   const stopCurrentAudio = () => {
+    if (speechRunRef.current) {
+      speechRunRef.current.cancelled = true;
+      speechRunRef.current = null;
+    }
+    if (revealTimerRef.current) {
+      clearInterval(revealTimerRef.current);
+      revealTimerRef.current = null;
+    }
     if (currentAudioRef.current) {
+      currentAudioRef.current.onended = null;
+      currentAudioRef.current.onerror = null;
       currentAudioRef.current.pause();
+      currentAudioRef.current.src = '';
       currentAudioRef.current = null;
     }
     if (window.speechSynthesis) {
@@ -175,20 +205,22 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
   // clock, or by a timer when we only have the Web Speech fallback.
   // Never let the placeholder flash past in a single frame.
   const REVEAL_FLOOR_MS = 280;
-  const revealStartedRef = useRef({});
 
-  const setRevealFloor = (messageId) => {
-    revealStartedRef.current[messageId] = Date.now();
-  };
-
-  const beginReveal = (messageId, text, getProgress, estimatedSeconds) => {
+  // options.ceiling  - stop the ramp at this ratio (1 = the whole answer)
+  // options.from     - start from this word count instead of rewinding to zero
+  // options.isPaused - freeze while the citizen has paused the voice
+  const beginReveal = (messageId, text, getProgress, estimatedSeconds, options = {}) => {
     const total = text.split(' ').length;
     if (!total) return;
+    const ceiling = Math.max(0, Math.min(1, options.ceiling ?? 1));
+    const isPaused = options.isPaused || (() => false);
+    const from = Math.max(0, Math.min(total, Number(options.from) || 0));
+    const remaining = total - from;
     const startedAt = Date.now();
     // Claim the message at zero words straight away, otherwise the render that
     // flips voiceReady to true lands before the first animation frame and the
     // entire answer flashes on screen for a single frame.
-    setRevealed((prev) => (prev[messageId] === 0 ? prev : { ...prev, [messageId]: 0 }));
+    setRevealCount(messageId, from);
     // If the audio clock stops advancing - a stalled or buffering stream happens
     // on kiosk browsers with poor networks - the words would freeze on screen
     // forever while the voice is still meant to be reading. After STALL_MS
@@ -201,20 +233,30 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
       // Only throttle during the first REVEAL_FLOOR_MS, so a quick answer cannot
       // snap open, and a long one still tracks the voice afterwards.
       const elapsed = Date.now() - startedAt;
+      // A pause the citizen asked for is not a stalled stream: hold the text
+      // exactly where it is instead of racing ahead on the wall clock.
+      if (isPaused()) {
+        lastAdvance = elapsed;
+        return;
+      }
       const cap = elapsed < REVEAL_FLOOR_MS ? elapsed / REVEAL_FLOOR_MS : 1;
       let progress = getProgress();
       if (progress > lastProgress + 0.0005) {
         lastProgress = progress;
         lastAdvance = elapsed;
       } else if (elapsed - lastAdvance > STALL_MS && estimatedSeconds > 0) {
-        progress = Math.max(progress, elapsed / (estimatedSeconds * 1000));
+        // Never let the estimate push past the point the voice will actually
+        // reach, or the withheld detail flashes in before the voice finishes.
+        progress = Math.max(progress, Math.min(ceiling, elapsed / (estimatedSeconds * 1000)));
         lastProgress = progress;
         lastAdvance = elapsed;
       }
-      const ratio = Math.max(0, Math.min(1, Math.min(progress, cap)));
-      const count = ratio >= 1 ? total : Math.min(total, Math.max(1, Math.ceil(ratio * total)));
-      setRevealed((prev) => (prev[messageId] === count ? prev : { ...prev, [messageId]: count }));
-      if (ratio < 1) return;
+      const ratio = Math.max(0, Math.min(ceiling, Math.min(progress, cap)));
+      const count = remaining <= 0
+        ? total
+        : Math.min(total, from + Math.max(1, Math.ceil(ratio * remaining)));
+      setRevealCount(messageId, count);
+      if (ratio < ceiling) return;
       clearInterval(revealTimerRef.current);
       revealTimerRef.current = null;
     };
@@ -222,12 +264,24 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
     revealTimerRef.current = setInterval(tick, 60);
   };
 
+  // Fill in whatever the voice chose not to read, over about three quarters of
+  // a second, so the screen still ends up with the whole answer.
+  const revealRemainder = (messageId, text) => {
+    const startedAt = Date.now();
+    const span = 750;
+    // Continue from the lead the voice already read rather than snapping the
+    // text back to zero and re-revealing it.
+    beginReveal(messageId, text, () => (Date.now() - startedAt) / span, span / 1000, {
+      from: revealedRef.current[messageId] || 0
+    });
+  };
+
   const finishReveal = (messageId, text) => {
     if (revealTimerRef.current) {
       clearInterval(revealTimerRef.current);
       revealTimerRef.current = null;
     }
-    setRevealed((prev) => ({ ...prev, [messageId]: text.split(' ').length }));
+    setRevealCount(messageId, text.split(' ').length);
   };
 
   // Held-back text: only the words the voice has actually spoken so far.
@@ -259,19 +313,111 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
     return 0;
   };
 
-  const playAssistantSpeech = async (messageId, text, langCode) => {
+  // ── Speaking a long answer ────────────────────────────────────────────────
+  // The voice used to be handed the whole answer at once, which meant waiting
+  // for every second of audio to be synthesised before a single word was
+  // spoken. It is now handed the answer in sentence-sized pieces: the first
+  // piece starts as soon as it lands (roughly a fifth of the reply), and the
+  // rest are fetched in the background while the voice is already talking, so
+  // the speech runs on without a gap.
+  const SPEECH_CHUNK_CHARS = 260;
+  const SPEECH_CHUNK_MIN = 70;
+  const PREFETCH_CONCURRENCY = 2;
+  const countWords = (value) => (value ? value.trim().split(/\s+/).filter(Boolean).length : 0);
+
+  const stripSpeechMarkup = (value) =>
+    (value || '')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')   // links -> their label
+      .replace(/[#*`~|>]/g, ' ')
+      // \U is not a JavaScript escape: it put the literal characters
+      // U/0/1/F/A into the class, so it silently deleted letters and digits
+      // from every answer (PMFBY -> "Y", "4%" -> "%", "3 lakh" -> "lakh").
+      .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, ' ') // emoji
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  // Split on sentence ends, then group sentences into pieces small enough that
+  // the first one is quick to synthesise but big enough to sound like speech
+  // rather than a series of clipped fragments.
+  const splitSpeechChunks = (value) => {
+    const clean = stripSpeechMarkup(value);
+    if (!clean) return [];
+    const sentences = clean
+      .split(/(?<=[.!?।॥])\s+/)
+      .map((sentence) => sentence.trim())
+      .filter(Boolean);
+    if (!sentences.length) return [clean.slice(0, SPEECH_CHUNK_CHARS)];
+
+    const chunks = [];
+    let current = '';
+    for (const sentence of sentences) {
+      // A single very long sentence still has to be broken up somewhere.
+      if (sentence.length > SPEECH_CHUNK_CHARS) {
+        if (current) { chunks.push(current); current = ''; }
+        for (let i = 0; i < sentence.length; i += SPEECH_CHUNK_CHARS) {
+          chunks.push(sentence.slice(i, i + SPEECH_CHUNK_CHARS).trim());
+        }
+        continue;
+      }
+      if (!current) {
+        current = sentence;
+      } else if (current.length + sentence.length + 1 <= SPEECH_CHUNK_CHARS) {
+        current += ' ' + sentence;
+      } else {
+        chunks.push(current);
+        current = sentence;
+      }
+    }
+    if (current) {
+      if (chunks.length && current.length < SPEECH_CHUNK_MIN) {
+        chunks[chunks.length - 1] += ' ' + current;
+      } else {
+        chunks.push(current);
+      }
+    }
+    return chunks.filter(Boolean);
+  };
+
+  // How much of the *answer on screen* the spoken text accounts for. When the
+  // voice only reads the lead, the reveal follows that lead and the remaining
+  // detail is shown once the voice stops.
+  const spokenWordTarget = (answerText, spokenText) => {
+    const answerWords = countWords(answerText);
+    const spokenWords = countWords(spokenText);
+    if (!answerWords) return 0;
+    if (spokenWords >= answerWords) return answerWords;
+
+    const norm = (value) => stripSpeechMarkup(value).toLowerCase();
+    const needle = norm(spokenText);
+    const hay = norm(answerText);
+    // Anchor on the closing words of what was spoken and find where they land
+    // in the full answer.
+    const tail = needle.slice(-60);
+    const at = tail.length > 12 ? hay.lastIndexOf(tail) : -1;
+    if (at >= 0) {
+      const covered = hay.slice(0, at + tail.length).trim();
+      const target = countWords(covered);
+      if (target > 0) return Math.min(answerWords, target);
+    }
+    // Fall back to the share of the answer that was actually spoken.
+    return Math.min(answerWords, Math.max(1, Math.round((spokenWords / answerWords) * answerWords)));
+  };
+
+  const playAssistantSpeech = async (messageId, answerText, langCode, spokenText) => {
     stopCurrentAudio();
+    const fullAnswer = answerText || '';
+    // The backend decides how much of the answer is worth saying out loud. If
+    // it did not say (an older backend, or a cached answer) the whole answer is
+    // read, which is what the citizen asked for.
+    const text = stripSpeechMarkup(spokenText || fullAnswer);
     if (!text) return;
 
-    // Prefer the user's chosen language for neural TTS; only sniff the script
-    // when the choice is English (e.g. auto-detected answers). This stops
-    // Devanagari answers (hi/mr) always being read as Hindi.
     const effectiveLang =
       langCode && langCode !== 'en' ? langCode : detectScriptLanguage(text) || language || 'en';
     setAudioState({ messageId, status: 'loading' });
 
-    // Safety guard: never allow the "Generating Voice..." spinner to hang forever.
-    setTimeout(() => {
+    // Safety guard: never leave the voice waiting forever.
+    const guard = setTimeout(() => {
       setAudioState((prev) =>
         prev.messageId === messageId && prev.status === 'loading'
           ? { messageId: null, status: 'idle' }
@@ -279,64 +425,196 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
       );
     }, 18000);
 
-    // Strip markdown/emoji and cap length so the neural TTS is fast & natural.
-    const speakText = text
-      .replace(/[#*`📌⚠️🏛️🌾⚖️💳🛡️💊🚜📲🏗️💻🧮📊🔒•]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 230);
+    const chunks = splitSpeechChunks(text);
+    if (!chunks.length) { clearTimeout(guard); return; }
+
+    const run = {
+      cancelled: false,
+      paused: false,
+      chunks,
+      urls: new Array(chunks.length).fill(null),
+      totalWords: countWords(text),
+      targetWords: spokenWordTarget(fullAnswer, text),
+      inFlight: 0,
+      pending: new Set(),
+    };
+    speechRunRef.current = run;
+
+    const fetchChunk = async (index) => {
+      if (run.cancelled || index >= chunks.length) return null;
+      if (run.urls[index]) return run.urls[index];
+      // Never ask twice for the same piece: the main loop and the prefetcher
+      // can both reach for it.
+      if (run.pending.has(index)) return null;
+      if (run.inFlight >= PREFETCH_CONCURRENCY) return null;
+      run.pending.add(index);
+      run.inFlight += 1;
+      try {
+        const url = await fetchTTSAudio(chunks[index], effectiveLang);
+        if (!run.cancelled) run.urls[index] = url;
+        return url;
+      } catch {
+        return null;
+      } finally {
+        run.inFlight -= 1;
+        run.pending.delete(index);
+      }
+    };
+
+    // Keep the queue ahead of the voice: whenever a slot frees up, go and get
+    // the next piece so it is ready the moment the current one ends.
+    const pumpPrefetch = () => {
+      if (run.cancelled) return;
+      for (let i = run.index + 1; i < chunks.length; i += 1) {
+        if (run.inFlight >= PREFETCH_CONCURRENCY) break;
+        if (run.urls[i] || run.pending.has(i)) continue;
+        fetchChunk(i);
+      }
+    };
+
+    const revealGlobal = (run_, wordsBefore, chunkText, getChunkProgress) => {
+      const spoken = wordsBefore + countWords(chunkText) * Math.max(0, Math.min(1, getChunkProgress()));
+      const share = run_.totalWords ? spoken / run_.totalWords : 1;
+      const answerWords = countWords(fullAnswer);
+      const shown = Math.max(1, Math.round(share * (run_.targetWords || answerWords)));
+      return { shown: Math.min(shown, run_.targetWords || answerWords || shown), of: answerWords };
+    };
+
+    // One reveal session spans the whole reply. These are read through the
+    // closure the session samples, so crossing into the next piece carries the
+    // text forward instead of restarting it.
+    const revealState = { wordsBefore: 0, index: 0, audio: null, ratio: 0, started: false };
+    // The voice only reads this much of the answer, so the reveal must stop
+    // here and hand over to the remainder fill instead of running to the end.
+    const answerWords = countWords(fullAnswer);
+    const revealCeiling = answerWords ? Math.min(1, (run.targetWords || answerWords) / answerWords) : 1;
+    let startedSpeaking = false;
+    let fellBack = false;
 
     try {
-      // 1. Try Backend TTS Engine (/chat/tts) with clean spoken text
-      const audioUrl = await fetchTTSAudio(speakText, effectiveLang);
-      if (audioUrl) {
-        const audio = new Audio(audioUrl);
-        audio.playbackRate = 1.0;
-        currentAudioRef.current = audio;
+      for (let index = 0; index < chunks.length; index += 1) {
+        if (run.cancelled) { clearTimeout(guard); return; }
+        run.index = index;
 
-        audio.onplay = () => {
-          setAudioState({ messageId, status: 'playing' });
-          setMessages((prev) =>
-            prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
-          );
-          setRevealFloor(messageId);
-          beginReveal(messageId, text, () => revealProgressFor(audio, text), estimateSpeakSeconds(text));
-        };
-        audio.onpause = () => {
-          if (audio.currentTime < audio.duration) {
-            setAudioState({ messageId, status: 'paused' });
+        let url = run.urls[index];
+        if (!url) {
+          url = await fetchChunk(index);
+          // Give the background fetcher a moment to catch up rather than
+          // dropping straight into a silent gap.
+          if (!url) {
+            url = await new Promise((resolve) => {
+              let waited = 0;
+              const poll = setInterval(() => {
+                waited += 120;
+                if (run.cancelled || run.urls[index] || waited > 12000) {
+                  clearInterval(poll);
+                  resolve(run.cancelled ? null : run.urls[index]);
+                }
+              }, 120);
+            });
           }
-        };
-        audio.onended = () => {
-          setAudioState({ messageId: null, status: 'idle' });
-          currentAudioRef.current = null;
-          finishReveal(messageId, text);
-        };
-        audio.onerror = () => {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
-          );
-          fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
-        };
-
-        try {
-          await audio.play();
-          return;
-        } catch (playErr) {
-          console.warn('Audio play failed, falling back to Web Speech:', playErr);
-          setMessages((prev) =>
-            prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
-          );
-          fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
-          return;
         }
+        if (run.cancelled) { clearTimeout(guard); return; }
+
+        // A piece we could not fetch is skipped rather than allowed to stall
+        // the whole reply.
+        if (!url) continue;
+
+        const played = await new Promise((resolve) => {
+          const audio = new Audio(url);
+          audio.playbackRate = 1.0;
+          run.audio = audio;
+          currentAudioRef.current = audio;
+          revealState.index = index;
+          revealState.audio = audio;
+
+          audio.onplay = () => {
+            if (run.cancelled) return;
+            startedSpeaking = true;
+            setAudioState({ messageId, status: 'playing' });
+            setMessages((prev) =>
+              prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+            );
+            revealState.index = index;
+            revealState.audio = audio;
+            // beginReveal claims the message at zero words, so calling it again
+            // for every piece would throw the visible text back to the start at
+            // each chunk boundary. Start it once and let it follow the queue.
+            if (!revealState.started) {
+              revealState.started = true;
+              beginReveal(
+                messageId,
+                fullAnswer,
+                () => {
+                  const audioNow = revealState.audio;
+                  const chunkNow = chunks[revealState.index] || '';
+                  const g = revealGlobal(run, revealState.wordsBefore, chunkNow, () =>
+                    audioNow ? revealProgressFor(audioNow, chunkNow) : 1
+                  );
+                  // beginReveal wants a 0..1 ratio; a raw word count saturates
+                  // the clamp and dumps the whole answer on screen at once.
+                  revealState.ratio = Math.max(0, Math.min(1, g.shown / (g.of || 1)));
+                  return revealState.ratio;
+                },
+                estimateSpeakSeconds(text),
+                { ceiling: revealCeiling, isPaused: () => run.paused }
+              );
+            }
+            // Only once the voice is actually audible do we go and get the rest.
+            if (index === 0) pumpPrefetch();
+          };
+          audio.onended = () => resolve(true);
+          audio.onerror = () => resolve(false);
+          audio.onpause = () => {
+            if (audio.currentTime < audio.duration) setAudioState({ messageId, status: 'paused' });
+          };
+
+          audio.play().catch(() => resolve(false));
+        });
+
+        currentAudioRef.current = null;
+        run.audio = null;
+        revealState.audio = null;
+
+        if (run.cancelled) { clearTimeout(guard); return; }
+        if (!played) { fellBack = true; break; }
+
+        revealState.wordsBefore += countWords(chunks[index]);
+        if (index < chunks.length - 1) pumpPrefetch();
       }
     } catch (err) {
       console.warn('Backend audio play error, falling back to Web Speech:', err);
+      fellBack = true;
     }
 
-    // Fallback: Web Speech API
-    fallbackSpeechSynthesis(messageId, speakText, effectiveLang);
+    clearTimeout(guard);
+    if (run.cancelled) return;
+
+    if (fellBack) {
+      // Something in the chain broke. Hand the whole spoken part to the browser
+      // voice so the citizen still hears the answer.
+      speechRunRef.current = null;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === messageId ? { ...m, voiceReady: true } : m))
+      );
+      fallbackSpeechSynthesis(messageId, text, effectiveLang);
+      return;
+    }
+
+    speechRunRef.current = null;
+    setAudioState({ messageId: null, status: 'idle' });
+
+    if (startedSpeaking) {
+      if (run.targetWords >= countWords(fullAnswer)) {
+        finishReveal(messageId, fullAnswer);
+      } else {
+        // The voice read the lead; the detail that was held back now fills in
+        // so the screen ends up complete either way.
+        revealRemainder(messageId, fullAnswer);
+      }
+    } else {
+      finishReveal(messageId, fullAnswer);
+    }
   };
 
   /**
@@ -459,13 +737,14 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
     window.speechSynthesis.speak(utterance);
   };
 
-  const toggleSpeech = (messageId, text) => {
+  const toggleSpeech = (messageId, text, readAloud) => {
     if (audioState.messageId === messageId && audioState.status === 'playing') {
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
       } else if (window.speechSynthesis) {
         window.speechSynthesis.pause();
       }
+      if (speechRunRef.current) speechRunRef.current.paused = true;
       setAudioState({ messageId, status: 'paused' });
     } else if (audioState.messageId === messageId && audioState.status === 'paused') {
       if (currentAudioRef.current) {
@@ -473,9 +752,10 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
       } else if (window.speechSynthesis) {
         window.speechSynthesis.resume();
       }
+      if (speechRunRef.current) speechRunRef.current.paused = false;
       setAudioState({ messageId, status: 'playing' });
     } else {
-      playAssistantSpeech(messageId, text, language);
+      playAssistantSpeech(messageId, text, language, readAloud);
     }
   };
 
@@ -496,13 +776,23 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
         activeDomains: response.activeDomains || [response.domain || 'general'],
         verifiedFacts: response.verifiedFacts || [],
         sourceAuthority: response.sourceAuthority,
+        // What the backend decided is worth saying, and what to ask next.
+        // Without a plan the whole answer is read out.
+        readAloud: response.read_aloud || response.readAloud || '',
+        followUpKind: response.follow_up_kind || response.followUpKind || null,
+        detailWithheld: response.detail_withheld ?? response.detailWithheld ?? false,
       },
     ]);
 
     // Auto-start with voice speech on output
     if (response.answer) {
       setTimeout(() => {
-        playAssistantSpeech(newMsgId, response.answer, language);
+        playAssistantSpeech(
+          newMsgId,
+          response.answer,
+          language,
+          response.read_aloud || response.readAloud || ''
+        );
       }, 100);
     }
   };
@@ -530,6 +820,19 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // A follow-up is offered only while there is something left to read out. Once
+  // the citizen takes it, the chip retires so the thread does not accumulate
+  // questions nobody asked.
+  const askFollowUp = (messageId, kind) => {
+    const key = FOLLOW_UP_KEYS[kind];
+    const question = key ? t(key) : '';
+    if (!question) return;
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, followUpUsed: true } : m))
+    );
+    handleTextSend(question);
   };
 
   useEffect(() => {
@@ -787,7 +1090,7 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
                     <div className="chat-audio-controls">
                       <button
                         type="button"
-                        onClick={() => toggleSpeech(msg.id, msg.text)}
+                        onClick={() => toggleSpeech(msg.id, msg.text, msg.readAloud)}
                         className={`chat-audio-btn ${isPlaying ? 'playing' : ''} ${isAudioLoading ? 'loading' : ''} ${isAudioError ? 'error' : ''}`}
                         title={isPlaying ? 'Pause Voice' : isPaused ? 'Resume Voice' : isAudioError ? 'Voice failed - tap to retry' : 'Listen with Voice'}
                       >
@@ -826,6 +1129,16 @@ export default function ChatBox({ initialQuery = '', onConversationState, autoLi
                     </div>
                   )}
                 </div>
+                {!isUser && msg.followUpKind && !msg.followUpUsed && FOLLOW_UP_KEYS[msg.followUpKind] && (
+                  <button
+                    type="button"
+                    className="chat-followup"
+                    onClick={() => askFollowUp(msg.id, msg.followUpKind)}
+                  >
+                    <MessageCircleQuestion size={15} />
+                    <span>{t(FOLLOW_UP_KEYS[msg.followUpKind])}</span>
+                  </button>
+                )}
                 {!isUser && msg.officerRecommendation && (
                   <OfficerRecommendationCard officer={msg.officerRecommendation} />
                 )}
